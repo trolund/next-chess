@@ -119,3 +119,37 @@
     flex-direction: column;
   }
 }
+
+.parent {
+  transition: all 0.2s ease-in-out;
+  
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  grid-column-gap: 0px;
+  grid-row-gap: 0px;
+  border: 5px solid var(--black-color);
+}
+
+.parent div {
+  margin: 0px;
+  height: var(--field-size);
+  width: var(--field-size);
+  text-align: center;
+  line-height: var(--field-size);
+  padding: 2px;
+}
+
+.parent div img {
+
+}
+
+.highlight:before {
+  content: "";
+  height: var(--field-size);
+  width: var(--field-size);
+  background-color: #0071f367 !important;
+  position: absolute;
+  margin: -2px;
+  padding: 0px;
+}

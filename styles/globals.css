@@ -1,3 +1,33 @@
+:root {
+  --field-size: 55px;
+  --black-color: rgb(48, 48, 48);
+  --white-color: rgb(240, 240, 240);
+}
+
+@media only screen and (max-width: 500px) {
+  :root {
+    --field-size: 50px;
+  }
+}
+
+@media only screen and (max-width: 450px) {
+  :root {
+    --field-size: 45px;
+  }
+}
+
+@media only screen and (max-width: 400px) {
+  :root {
+    --field-size: 40px;
+  }
+}
+
+@media only screen and (max-width: 350px) {
+  :root {
+    --field-size: 100%;
+  }
+}
+
 html,
 body {
   padding: 0;
