@@ -13,7 +13,7 @@ interface HomeProps {
 function Home(props: HomeProps): JSX.Element {
 
   const [gameState, setGameState] = useState<chess.gameState>(chess.createGame());
-  // const [selectedField, setSelectedField] = useState<chess.field | null>(null);
+  const [selectedField, setSelectedField] = useState<chess.field | null>(null);
   // const [validMoves, setValidMoves] = useState<chess.pos[]>();
 
   const setState = (s: chess.gameState) => {
@@ -24,20 +24,26 @@ function Home(props: HomeProps): JSX.Element {
     })
   }
 
-  const f = () => {
-    console.log("hej");
-
+  const doMove = (from: chess.pos, to: chess.pos) => {
     try {
-      setState(chess.move({ row: 7, col: 0 }, { row: 4, col: 4 }, gameState))
+      setState(chess.move(from, to, gameState))
+      console.log(chess.notation(from) + " to " + chess.notation(to))
     } catch (e) {
       console.log(e);
     }
-
   }
 
-  useEffect(() => {
-    console.log(gameState);
-  }, [gameState])
+
+  const handleOnPieceClick = (f: chess.field) => {
+    if (selectedField) {
+      const to = f.pos!;
+      const from = selectedField.pos!;
+      doMove(from, to)
+      setSelectedField(null)
+    } else {
+      setSelectedField(f)
+    }
+  }
 
   return (
     <div className={styles.container}>
@@ -51,13 +57,11 @@ function Home(props: HomeProps): JSX.Element {
       </Head>
 
       <main className={styles.main}>
-        <button onClick={f}>click</button>
         <Board
           board={gameState.board}
           turn={gameState.turn}
           highlight={chess.allValidMoves({ col: 0, row: 0 }, gameState)}
-          pieceOnClick={(f) => console.log(chess.notation(f.pos!))}
-        />
+          pieceOnClick={handleOnPieceClick} />
       </main>
 
       {/* <footer className={styles.footer}>
