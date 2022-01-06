@@ -153,3 +153,13 @@
   margin: -2px;
   padding: 0px;
 }
+
+.selected:before {
+  content: "";
+  height: var(--field-size);
+  width: var(--field-size);
+  background-color: #f38a0067 !important;
+  position: absolute;
+  margin: -2px;
+  padding: 0px;
+}

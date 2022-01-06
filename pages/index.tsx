@@ -40,7 +40,7 @@ function Home(props: HomeProps): JSX.Element {
       const from = selectedField.pos!;
       doMove(from, to)
       setSelectedField(null)
-    } else {
+    } else if (f.piece) {
       setSelectedField(f)
     }
   }
@@ -58,6 +58,7 @@ function Home(props: HomeProps): JSX.Element {
 
       <main className={styles.main}>
         <Board
+          selected={selectedField}
           board={gameState.board}
           turn={gameState.turn}
           highlight={chess.allValidMoves({ col: 0, row: 0 }, gameState)}

@@ -13,9 +13,10 @@ interface PieceProps {
     onClick?: (field: chess.field) => void;
     highlight?: boolean;
     turn?: chess.team;
+    selected?: boolean | undefined | null;
 }
 
-const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onClick, highlight, turn }) => {
+const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onClick, highlight, turn, selected }) => {
 
 
     const getColor = (isBlack: boolean): string => isBlack ? "var(--white-color)" : "var(--black-color)"
@@ -31,7 +32,7 @@ const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onCl
     }
 
     return (
-        <div className={className + (highlight ? (" " + styles.highlight) : "")}
+        <div className={className + (highlight ? (" " + styles.highlight) : "") + (selected ? (" " + styles.selected) : "")}
             onClick={() => {
                 if (onClick) onClick({ ...field, pos: { row, col } })
             }}

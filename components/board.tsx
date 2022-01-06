@@ -10,9 +10,10 @@ interface BoardProps {
     highlight?: chess.pos[];
     pieceOnClick?: (field: chess.field) => void;
     turn?: chess.team;
+    selected: chess.field | null;
 }
 
-const Board: FunctionComponent<BoardProps> = ({ board, highlight, pieceOnClick, turn }) => {
+const Board: FunctionComponent<BoardProps> = ({ board, highlight, pieceOnClick, turn, selected }) => {
 
     console.log("board", highlight?.find(x => x.col === 0 && x.row === 0) !== undefined);
 
@@ -22,6 +23,7 @@ const Board: FunctionComponent<BoardProps> = ({ board, highlight, pieceOnClick, 
             {board.map((theRow, row) =>
                 theRow.map((f, col) => <Piece
                     highlight={highlight?.find(x => x.col === col && x.row === row) !== undefined}
+                    selected={selected && selected?.pos && col === selected.pos.col && row === selected.pos.row}
                     turn={turn}
                     onClick={pieceOnClick}
                     key={"#" + row + "#" + col}
