@@ -40,7 +40,7 @@ function Home(props: HomeProps): JSX.Element {
       const from = selectedField.pos!;
       doMove(from, to)
       setSelectedField(null)
-    } else if (f.piece) {
+    } else if (f.piece && f.team === gameState.turn) {
       setSelectedField(f)
     }
   }
