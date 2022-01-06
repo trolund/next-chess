@@ -108,4 +108,10 @@ export module chess {
 
         return [{ col: 0, row: 0 }, { col: 4, row: 5 }];
     }
+
+    export const notation = (pos: chess.pos): string => {
+        const col = ["A", "B", "C", "D", "E", "F", "G", "H"]
+
+        return `${8 - pos.row}${col[pos.col]}`
+    }
 }

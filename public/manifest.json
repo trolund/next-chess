@@ -1,0 +1,11 @@
+{
+    "theme_color": "#ffffff",
+    "background_color": "#000000",
+    "display": "standalone",
+    "scope": "/",
+    "start_url": "/",
+    "name": "Chess",
+    "short_name": "Chess",
+    "description": "The game Chess",
+    "icons": []
+}

@@ -16,14 +16,19 @@ function Home(props: HomeProps): JSX.Element {
   // const [selectedField, setSelectedField] = useState<chess.field | null>(null);
   // const [validMoves, setValidMoves] = useState<chess.pos[]>();
 
+  const setState = (s: chess.gameState) => {
+    setGameState({
+      board: [...s.board],
+      piecesTaken: [...s.piecesTaken],
+      turn: s.turn
+    })
+  }
+
   const f = () => {
     console.log("hej");
 
     try {
-      // setGameState(chess.move({ row: 7, col: 0 }, { row: 4, col: 4 }, gameState))
-      // setGameState(chess.move({ row: 7, col: 2 }, { row: 4, col: 5 }, gameState))
-      // setGameState(chess.move({ row: 7, col: 1 }, { row: 3, col: 5 }, gameState))
-      // setGameState(chess.move({ row: 7, col: 3 }, { row: 4, col: 6 }, gameState))
+      setState(chess.move({ row: 7, col: 0 }, { row: 4, col: 4 }, gameState))
     } catch (e) {
       console.log(e);
     }
@@ -47,7 +52,12 @@ function Home(props: HomeProps): JSX.Element {
 
       <main className={styles.main}>
         <button onClick={f}>click</button>
-        <Board board={gameState.board} turn={gameState.turn} highlight={chess.allValidMoves({ col: 0, row: 0 }, gameState)} />
+        <Board
+          board={gameState.board}
+          turn={gameState.turn}
+          highlight={chess.allValidMoves({ col: 0, row: 0 }, gameState)}
+          pieceOnClick={(f) => console.log(chess.notation(f.pos!))}
+        />
       </main>
 
       {/* <footer className={styles.footer}>
