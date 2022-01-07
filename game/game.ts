@@ -17,7 +17,7 @@ export module chess {
 
     export type gameState = {
         board: board;
-        piecesTaken: piece[];
+        piecesTaken: field[];
         turn: team;
     }
 
@@ -93,6 +93,11 @@ export module chess {
         const tempTeam = from.team;
         const tempPiece = from.piece;
 
+        // add 
+        if (prevState.board[toPos.row][toPos.col].piece != null) {
+            prevState.piecesTaken.push(prevState.board[toPos.row][toPos.col])
+        }
+
         prevState.board[fromPos.row][fromPos.col].team = null
         prevState.board[fromPos.row][fromPos.col].piece = null
 
@@ -103,11 +108,54 @@ export module chess {
     }
 
     export const allValidMoves = (fromPos: pos, state: gameState): pos[] => {
-        let moves = new Set<pos>();
-        const from = state.board[fromPos.row][fromPos.col];
 
-        return [{ col: 0, row: 0 }, { col: 4, row: 5 }];
+        if (!fromPos || !state) {
+            return []
+        }
+
+        const validMoves: chess.pos[] = [];
+        state.board.forEach((row, i) => {
+            row.forEach((field, j) => {
+                const pos: chess.pos = { row: i, col: j };
+                if (isValidMove(fromPos, pos, state)) {
+                    validMoves.push(pos)
+                }
+            })
+        });
+
+        return validMoves;
     }
+
+    // the way is not shadowed by an other piece
+    // return true if is shadow
+    const firstInRow = (row: field[], from: pos, turn: chess.team): number => {
+        for (let index = 0; index < from.row; index++) {
+            const field = row[index];
+            if (field.piece) {
+                return field.pos?.row!
+            }
+        }
+
+        return 0;
+    }
+
+
+    export const isValidMove = (from: pos, to: pos, state: gameState): boolean => {
+        const pieceField: field = state.board[from.row][from.col];
+        const toField: field = state.board[to.row][to.col];
+
+        if (pieceField.team !== state.turn) {
+            return false;
+        }
+
+        if (pieceField.piece === "pawn") {
+            return to.col === from.col && to.row < from.row
+        }
+
+        return false;
+    }
+
+
 
     export const notation = (pos: chess.pos): string => {
         const col = ["A", "B", "C", "D", "E", "F", "G", "H"]

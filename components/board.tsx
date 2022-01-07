@@ -1,5 +1,3 @@
-import { inject } from "mobx-react";
-import { observer } from "mobx-react-lite";
 import { FunctionComponent } from "react"
 import { chess } from "../game/game"
 import styles from '../styles/Home.module.css'
@@ -15,7 +13,7 @@ interface BoardProps {
 
 const Board: FunctionComponent<BoardProps> = ({ board, highlight, pieceOnClick, turn, selected }) => {
 
-    console.log("board", highlight?.find(x => x.col === 0 && x.row === 0) !== undefined);
+    // console.log("board", highlight?.find(x => x.col === 0 && x.row === 0) !== undefined);
 
 
     return (

@@ -3,8 +3,8 @@ import styles from '../styles/Home.module.css'
 import { chess } from '../game/game'
 import Board from '../components/board'
 import { DataStore } from '../stores/dataStore'
-import { inject, observer } from 'mobx-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import Image from 'next/image'
 
 interface HomeProps {
   dataStore?: DataStore;
@@ -57,26 +57,22 @@ function Home(props: HomeProps): JSX.Element {
       </Head>
 
       <main className={styles.main}>
-        <Board
-          selected={selectedField}
-          board={gameState.board}
-          turn={gameState.turn}
-          highlight={chess.allValidMoves({ col: 0, row: 0 }, gameState)}
-          pieceOnClick={handleOnPieceClick} />
+        <div className={styles.grid}>
+          <div>
+            {gameState.piecesTaken.filter(f => f.team === 'black').map(field => <div><Image height="30%" width="30%" src={`/img/${field.team}-${field.piece}.svg`} /></div>)}
+          </div>
+          <Board
+            selected={selectedField}
+            board={gameState.board}
+            turn={gameState.turn}
+            highlight={chess.allValidMoves(selectedField?.pos!, gameState)}
+            pieceOnClick={handleOnPieceClick}
+          />
+          <div>
+            {gameState.piecesTaken.filter(f => f.team === 'white').map(field => <div><Image height="30%" width="30%" src={`/img/${field.team}-${field.piece}.svg`} /></div>)}
+          </div>
+        </div>
       </main>
-
-      {/* <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <span className={styles.logo}>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
-        </a>
-      </footer> */}
     </div>
   )
 }
