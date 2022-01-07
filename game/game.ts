@@ -74,6 +74,8 @@ export module chess {
     // not done
     export const move = (fromPos: pos, toPos: pos, prevState: gameState): gameState => {
 
+        if (!isValidMove(fromPos, toPos, prevState)) throw new Error("This is not a valid move!")
+
         const board = prevState.board;
         const teamsTurn = prevState.turn;
 
