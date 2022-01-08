@@ -198,8 +198,10 @@ export module chess {
                 && to.row - reach <= from.row
                 && to.col + reach >= from.col
                 && to.col - reach <= from.col
-                && (to.row + to.col) % 2 === 1
+                // && (to.row + to.col) % 2 === 0
                 && !(from.col === to.col || from.row === to.row)
+                && (from.col + 1 != to.col && from.row + 1 != to.row)
+
 
 
         }
