@@ -147,9 +147,12 @@ export module chess {
         return state.board.map(d => d[rowIndex]);
     }
 
-    const pawnAttack = (from: pos, to: pos): boolean => {
-        const right = (from.col - 1) === to.col && to.row === from.row + 1;
-        const left = (from.col + 1) === to.col && to.row === from.row + 1;
+    const pawnAttack = (from: pos, to: pos, state: gameState): boolean => {
+        const rightField = (from.row - 1 !== -1 && from.col - 1 !== -1) ? state.board[from.row - 1][from.col - 1].piece : undefined
+        const leftField = (from.row - 1 !== -1 && from.col + 1 < state.board[0].length) ? state.board[from.row - 1][from.col + 1].piece : undefined
+
+        const right = (from.col - 1) === to.col && to.row === (from.row + 1) && rightField != null
+        const left = (from.col + 1) === to.col && to.row === (from.row + 1) && leftField != null
 
 
         return left || right
@@ -166,7 +169,7 @@ export module chess {
         if (pieceField.piece === "pawn") {
             return (to.col === from.col
                 && to.row < from.row
-                && !(to.row <= firstInCol(getCol(to.col, state)))) || pawnAttack(to, from)
+                && !(to.row <= firstInCol(getCol(to.col, state)))) || pawnAttack(to, from, state)
         }
 
         return false;
