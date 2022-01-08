@@ -194,8 +194,9 @@ export module chess {
                 || pawnAttack(from, to, state)
         } else if (pieceType === "bishop") {
             return ((from.col - to.col) + (from.row - to.row)) % 2 === 0
-                // && (from.col - to.col) === (from.row - to.row)
+                && state.board[to.row][to.col].team !== state.turn
                 && (to.col - from.col) === (from.row - to.row) || (from.col - to.col) === (from.row - to.row)
+                && state.board[to.row][to.col].team !== state.turn
         } else if (pieceType == "knight") {
             return (from.col + 2 == to.col && from.row + 1 == to.row
                 || from.col - 2 == to.col && from.row - 1 == to.row
