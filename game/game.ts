@@ -153,27 +153,55 @@ export module chess {
 
         if (right) {
             const rightField = state.board[to.row][to.col]
-            return rightField?.team !== state.turn
+            return rightField?.team !== state.turn && rightField.piece !== null
         } else if (left) {
             const leftField = state.board[to.row][to.col]
-            return leftField?.team !== state.turn
+            return leftField?.team !== state.turn && leftField.piece !== null
         } else {
             return false
         }
+    }
+
+    export const rotateBoard = (state: gameState): gameState => {
+        return { ...state, board: state.board.map(row => row.reverse()).reverse() }
     }
 
     export const isValidMove = (from: pos, to: pos, state: gameState): boolean => {
         const pieceField: field = state.board[from.row][from.col];
         const toField: field = state.board[to.row][to.col];
 
+        const pieceType = pieceField.piece;
+
         if (pieceField.team !== state.turn) {
             return false;
         }
 
-        if (pieceField.piece === "pawn") {
+        if (pieceType === "pawn") {
+            let maxWalkLength = 1;
+            if (state.turn === "white" && from.row === 6) {
+                maxWalkLength = 2;
+            } else if (state.turn === "black" && from.row === 1) {
+                maxWalkLength = 2;
+            }
+
             return (to.col === from.col
                 && to.row < from.row
-                && !(to.row <= firstInCol(getCol(to.col, state)))) || pawnAttack(from, to, state)
+                && to.row + maxWalkLength >= from.row
+                && !(to.row <= firstInCol(getCol(to.col, state))))
+                || pawnAttack(from, to, state)
+        } else if (pieceType === "bishop") {
+            return (to.row + to.col) % 2 === 1
+        } else if (pieceType == "knight") {
+            const reach = 2;
+
+            return to.row + reach >= from.row
+                && to.row - reach <= from.row
+                && to.col + reach >= from.col
+                && to.col - reach <= from.col
+                && (to.row + to.col) % 2 === 1
+                && !(from.col === to.col || from.row === to.row)
+
+
         }
 
         return false;

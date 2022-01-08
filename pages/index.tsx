@@ -59,6 +59,7 @@ function Home(props: HomeProps): JSX.Element {
       </Head>
 
       <main className={styles.main}>
+        <button onClick={() => setState(chess.rotateBoard(gameState))}>rotate</button>
         <div className={styles.grid}>
           <div>
             {gameState.piecesTaken.filter(f => f.team === 'black').map(field => <div><Image height="30%" width="30%" src={`/img/${field.team}-${field.piece}.svg`} /></div>)}
