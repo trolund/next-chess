@@ -184,24 +184,16 @@ export module chess {
                 maxWalkLength = 2;
             }
 
-            return (to.col === from.col
+            return (
+                to.col === from.col
                 && to.row < from.row
                 && to.row + maxWalkLength >= from.row
-                && !(to.row <= firstInCol(getCol(to.col, state))))
+                // && !(to.row <= firstInCol(getCol(to.col, state)))
+            )
                 || pawnAttack(from, to, state)
         } else if (pieceType === "bishop") {
             return (to.row + to.col) % 2 === 1
         } else if (pieceType == "knight") {
-            const reach = 2;
-
-            // return to.row + reach >= from.row
-            //     && to.row - reach <= from.row
-            //     && to.col + reach >= from.col
-            //     && to.col - reach <= from.col
-            //     // && (to.row + to.col) % 2 === 0
-            //     && !(from.col === to.col || from.row === to.row)
-            //     && (from.col + 1 != to.col && from.row + 1 != to.row)
-
             return (from.col + 2 == to.col && from.row + 1 == to.row
                 || from.col - 2 == to.col && from.row - 1 == to.row
                 || from.col + 2 == to.col && from.row - 1 == to.row
@@ -211,6 +203,8 @@ export module chess {
                 || from.col + 1 == to.col && from.row - 2 == to.row
                 || from.col - 1 == to.col && from.row - 2 == to.row)
                 && state.board[to.row][to.col].team !== state.turn
+        } else if (pieceType == "king") {
+            return to.col === from.col || to.row === from.row
         }
 
         return false;
