@@ -194,16 +194,23 @@ export module chess {
         } else if (pieceType == "knight") {
             const reach = 2;
 
-            return to.row + reach >= from.row
-                && to.row - reach <= from.row
-                && to.col + reach >= from.col
-                && to.col - reach <= from.col
-                // && (to.row + to.col) % 2 === 0
-                && !(from.col === to.col || from.row === to.row)
-                && (from.col + 1 != to.col && from.row + 1 != to.row)
+            // return to.row + reach >= from.row
+            //     && to.row - reach <= from.row
+            //     && to.col + reach >= from.col
+            //     && to.col - reach <= from.col
+            //     // && (to.row + to.col) % 2 === 0
+            //     && !(from.col === to.col || from.row === to.row)
+            //     && (from.col + 1 != to.col && from.row + 1 != to.row)
 
-
-
+            return (from.col + 2 == to.col && from.row + 1 == to.row
+                || from.col - 2 == to.col && from.row - 1 == to.row
+                || from.col + 2 == to.col && from.row - 1 == to.row
+                || from.col - 2 == to.col && from.row + 1 == to.row
+                || from.col - 1 == to.col && from.row + 2 == to.row
+                || from.col + 1 == to.col && from.row + 2 == to.row
+                || from.col + 1 == to.col && from.row - 2 == to.row
+                || from.col - 1 == to.col && from.row - 2 == to.row)
+                && state.board[to.row][to.col].team !== state.turn
         }
 
         return false;
