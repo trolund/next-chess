@@ -148,14 +148,18 @@ export module chess {
     }
 
     const pawnAttack = (from: pos, to: pos, state: gameState): boolean => {
-        const rightField = (from.row - 1 !== -1 && from.col - 1 !== -1) ? state.board[from.row - 1][from.col - 1].piece : undefined
-        const leftField = (from.row - 1 !== -1 && from.col + 1 < state.board[0].length) ? state.board[from.row - 1][from.col + 1].piece : undefined
+        const right = (to.col - 1) === from.col && from.row === (to.row + 1)
+        const left = (to.col + 1) === from.col && from.row === (to.row + 1)
 
-        const right = (from.col - 1) === to.col && to.row === (from.row + 1) && rightField != null
-        const left = (from.col + 1) === to.col && to.row === (from.row + 1) && leftField != null
-
-
-        return left || right
+        if (right) {
+            const rightField = state.board[to.row][to.col]
+            return rightField?.team !== state.turn
+        } else if (left) {
+            const leftField = state.board[to.row][to.col]
+            return leftField?.team !== state.turn
+        } else {
+            return false
+        }
     }
 
     export const isValidMove = (from: pos, to: pos, state: gameState): boolean => {
@@ -169,7 +173,7 @@ export module chess {
         if (pieceField.piece === "pawn") {
             return (to.col === from.col
                 && to.row < from.row
-                && !(to.row <= firstInCol(getCol(to.col, state)))) || pawnAttack(to, from, state)
+                && !(to.row <= firstInCol(getCol(to.col, state)))) || pawnAttack(from, to, state)
         }
 
         return false;
