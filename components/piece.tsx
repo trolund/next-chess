@@ -14,9 +14,10 @@ interface PieceProps {
     highlight?: boolean;
     turn?: chess.team;
     selected?: boolean | undefined | null;
+    debug?: boolean;
 }
 
-const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onClick, highlight, turn, selected }) => {
+const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onClick, highlight, turn, selected, debug }) => {
 
 
     const getColor = (isBlack: boolean): string => isBlack ? "var(--white-color)" : "var(--black-color)"
@@ -41,6 +42,7 @@ const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onCl
                 color: getColor(field.color === "black"),
                 cursor: cursor()
             }}>
+            {debug && <div style={{ position: "absolute" }}>{row}, {col}</div>}
             {<Image height="60%" width="60%" src={`/img/${field.team}-${field.piece}.svg`} />}
         </div>
     );

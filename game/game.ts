@@ -74,6 +74,7 @@ export module chess {
     // not done
     export const move = (fromPos: pos, toPos: pos, prevState: gameState): gameState => {
 
+        // throw error if the move is not valid
         if (!isValidMove(fromPos, toPos, prevState)) throw new Error("This is not a valid move!")
 
         const board = prevState.board;
@@ -130,17 +131,29 @@ export module chess {
 
     // the way is not shadowed by an other piece
     // return true if is shadow
-    const firstInRow = (row: field[], from: pos, turn: chess.team): number => {
-        for (let index = 0; index < from.row; index++) {
-            const field = row[index];
-            if (field.piece) {
-                return field.pos?.row!
-            }
-        }
+    const firstInCol = (col: field[]): number => {
+        let index = -1
 
-        return 0;
+        col.forEach((f, i) => {
+            if (f.piece) {
+                index = i
+            }
+        })
+
+        return 8 - index
     }
 
+    const getCol = (rowIndex: number, state: gameState) => {
+        return state.board.map(d => d[rowIndex]);
+    }
+
+    const pawnAttack = (from: pos, to: pos): boolean => {
+        const right = (from.col - 1) === to.col && to.row === from.row + 1;
+        const left = (from.col + 1) === to.col && to.row === from.row + 1;
+
+
+        return left || right
+    }
 
     export const isValidMove = (from: pos, to: pos, state: gameState): boolean => {
         const pieceField: field = state.board[from.row][from.col];
@@ -151,7 +164,9 @@ export module chess {
         }
 
         if (pieceField.piece === "pawn") {
-            return to.col === from.col && to.row < from.row
+            return (to.col === from.col
+                && to.row < from.row
+                && !(to.row <= firstInCol(getCol(to.col, state)))) || pawnAttack(to, from)
         }
 
         return false;

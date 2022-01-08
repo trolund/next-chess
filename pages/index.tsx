@@ -29,12 +29,14 @@ function Home(props: HomeProps): JSX.Element {
       setState(chess.move(from, to, gameState))
       console.log(chess.notation(from) + " to " + chess.notation(to))
     } catch (e) {
-      console.log(e);
+      console.log((e as Error).message);
     }
   }
 
 
   const handleOnPieceClick = (f: chess.field) => {
+    console.log(f.pos?.row, f.pos?.col, chess.notation(f.pos!));
+
     if (selectedField) {
       const to = f.pos!;
       const from = selectedField.pos!;
