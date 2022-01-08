@@ -171,6 +171,7 @@ export module chess {
         const toField: field = state.board[to.row][to.col];
 
         const pieceType = pieceField.piece;
+        const mod = pieceField.team === "black" ? 1 : 0
 
         if (pieceField.team !== state.turn) {
             return false;
@@ -192,7 +193,9 @@ export module chess {
             )
                 || pawnAttack(from, to, state)
         } else if (pieceType === "bishop") {
-            return (to.row + to.col) % 2 === 1
+            return ((from.col - to.col) + (from.row - to.row)) % 2 === 0
+                // && (from.col - to.col) === (from.row - to.row)
+                && (to.col - from.col) === (from.row - to.row) || (from.col - to.col) === (from.row - to.row)
         } else if (pieceType == "knight") {
             return (from.col + 2 == to.col && from.row + 1 == to.row
                 || from.col - 2 == to.col && from.row - 1 == to.row
@@ -205,9 +208,13 @@ export module chess {
                 && state.board[to.row][to.col].team !== state.turn
         } else if (pieceType == "king") {
             return to.col === from.col || to.row === from.row
+        } else if (pieceType == "rook") {
+            return to.col === from.col || to.row === from.row
+        } else if (pieceType == "queen") {
+            return to.col === from.col || to.row === from.row
+        } else {
+            return false;
         }
-
-        return false;
     }
 
 
