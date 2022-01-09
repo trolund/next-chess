@@ -151,12 +151,12 @@ export module chess {
         const right = (to.col - 1) === from.col && from.row === (to.row + 1)
         const left = (to.col + 1) === from.col && from.row === (to.row + 1)
 
+        const field = state.board[to.row][to.col]
+
         if (right) {
-            const rightField = state.board[to.row][to.col]
-            return rightField?.team !== state.turn && rightField.piece !== null
+            return field?.team !== state.turn && field.piece !== null
         } else if (left) {
-            const leftField = state.board[to.row][to.col]
-            return leftField?.team !== state.turn && leftField.piece !== null
+            return field?.team !== state.turn && field.piece !== null
         } else {
             return false
         }
@@ -185,10 +185,14 @@ export module chess {
                 maxWalkLength = 2;
             }
 
+            const center = to.col === from.col && from.row === to.row
+            const field = state.board[to.row][to.col]
+
             return (
                 to.col === from.col
                 && to.row < from.row
                 && to.row + maxWalkLength >= from.row
+                && ((center && field.piece !== null) || field.piece === null)
                 // && !(to.row <= firstInCol(getCol(to.col, state)))
             )
                 || pawnAttack(from, to, state)
