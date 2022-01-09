@@ -1,8 +1,14 @@
+import { validator } from "./validator"
+
 export module chess {
+
 
     // types
     export type team = "white" | "black" | null
     export type piece = "king" | "rook" | "bishop" | "queen" | "knight" | "pawn" | null
+
+    export type simplePiece = "k" | "K" | "q" | "Q" | "r" | "R" | "b" | "B" | "n" | "N" | "p" | "P" | "#"
+    export type simpleBoard = simplePiece[][]
 
     export type field = {
         team: team
@@ -19,18 +25,20 @@ export module chess {
         board: board;
         piecesTaken: field[];
         turn: team;
+        //  orientation: team; // the team in the bottom of the board.
     }
 
     // formatting debug 
     const formatPos = (pos: pos): string => `{${pos.row}, ${pos.col}}`
+
+    // get color of board
+    const getBoardColor = (row: number, col: number): team => (row + col) % 2 == 0 ? "white" : "black"
 
     // operations
     const createNewBoard = (): board => {
 
         const backLineWhite: piece[] = ["rook", "knight", "bishop", "king", "queen", "bishop", "knight", "rook"]
         const backLineBlack: piece[] = [...backLineWhite].reverse()
-
-        const getBoardColor = (row: number, col: number): team => (row + col) % 2 == 0 ? "white" : "black"
 
         const getPiece = (row: number, col: number): field => {
 
@@ -61,6 +69,63 @@ export module chess {
 
             for (var col: number = 0; col < 8; col++) {
                 board[row][col] = getPiece(row, col)
+            }
+        }
+
+        return board
+    }
+
+    const createNewBoardFromSimpleBoard = (sb: simpleBoard): board => {
+
+        const getField = (row: number, col: number): field => {
+            return fromSimpleToField(sb[row][col], row, col)
+        }
+
+        const getTeam = (char: string): team => {
+            if (char == char.toUpperCase()) {
+                return "black"
+            }
+
+            return "white"
+        }
+
+        const getPiece = (input: simplePiece): piece => {
+            const sp = input.toUpperCase()
+
+            if (sp === "K") {
+                return "king"
+            } else if (sp === "B") {
+                return "bishop"
+            } else if (sp === "N") {
+                return "knight"
+            } else if (sp === "P") {
+                return "pawn"
+            } else if (sp === "Q") {
+                return "queen"
+            } else if (sp === "R") {
+                return "rook"
+            } else {
+                return null
+            }
+        }
+
+        const fromSimpleToField = (sp: simplePiece, row: number, col: number): field => {
+            return {
+                color: getBoardColor(row, col),
+                team: getTeam(sp),
+                piece: getPiece(sp),
+                pos: { row, col }
+            }
+        }
+
+        const board: field[][] = []
+
+        for (var row: number = 0; row < 8; row++) {
+
+            board[row] = []
+
+            for (var col: number = 0; col < 8; col++) {
+                board[row][col] = getField(row, col)
             }
         }
 
@@ -107,6 +172,8 @@ export module chess {
         prevState.board[toPos.row][toPos.col].team = tempTeam
         prevState.board[toPos.row][toPos.col].piece = tempPiece
 
+        prevState.turn = prevState.turn === "white" ? "black" : "white"
+
         return prevState;
     }
 
@@ -147,9 +214,11 @@ export module chess {
         return state.board.map(d => d[rowIndex]);
     }
 
-    const pawnAttack = (from: pos, to: pos, state: gameState): boolean => {
-        const right = (to.col - 1) === from.col && from.row === (to.row + 1)
-        const left = (to.col + 1) === from.col && from.row === (to.row + 1)
+    const pawnAttack = (from: chess.pos, to: chess.pos, state: chess.gameState): boolean => {
+        const direction = state.turn === "white" ? 1 : -1
+
+        const right = (to.col - 1) === from.col && from.row === (to.row + direction)
+        const left = (to.col + 1) === from.col && from.row === (to.row + direction)
 
         const field = state.board[to.row][to.col]
 
@@ -162,8 +231,56 @@ export module chess {
         }
     }
 
-    export const rotateBoard = (state: gameState): gameState => {
-        return { ...state, board: state.board.map(row => row.reverse()).reverse() }
+    // export const rotateBoard = (state: gameState): gameState => {
+    //     return {
+    //         ...state,
+    //         board: state.board.map(row => row.reverse()).reverse(),
+    //         orientation: state.orientation === "white" ? "black" : "white"
+    //     }
+    // }
+
+    const pawn = (from: pos, to: pos, state: gameState) => {
+        let maxWalkLength = 1;
+        if (state.turn === "white" && from.row === 6) {
+            maxWalkLength = 2;
+        } else if (state.turn === "black" && from.row === 1) {
+            maxWalkLength = 2;
+        }
+
+        const center = to.col === from.col && from.row === to.row
+        const field = state.board[to.row][to.col]
+
+        if (state.turn === "white") {
+            return (
+                to.col === from.col
+                && to.row < from.row
+                && to.row + maxWalkLength >= from.row
+                && ((center && field.piece !== null) || field.piece === null)
+            )
+                || pawnAttack(from, to, state)
+        } else {
+            return (
+                to.col === from.col
+                && to.row > from.row
+                && to.row - maxWalkLength <= from.row
+                && ((center && field.piece !== null) || field.piece === null)
+            )
+                || pawnAttack(from, to, state)
+        }
+
+
+    }
+
+    const knight = (from: pos, to: pos, state: gameState) => {
+        return (from.col + 2 == to.col && from.row + 1 == to.row
+            || from.col - 2 == to.col && from.row - 1 == to.row
+            || from.col + 2 == to.col && from.row - 1 == to.row
+            || from.col - 2 == to.col && from.row + 1 == to.row
+            || from.col - 1 == to.col && from.row + 2 == to.row
+            || from.col + 1 == to.col && from.row + 2 == to.row
+            || from.col + 1 == to.col && from.row - 2 == to.row
+            || from.col - 1 == to.col && from.row - 2 == to.row)
+            && state.board[to.row][to.col].team !== state.turn
     }
 
     export const isValidMove = (from: pos, to: pos, state: gameState): boolean => {
@@ -171,46 +288,20 @@ export module chess {
         const toField: field = state.board[to.row][to.col];
 
         const pieceType = pieceField.piece;
-        const mod = pieceField.team === "black" ? 1 : 0
 
         if (pieceField.team !== state.turn) {
             return false;
         }
 
         if (pieceType === "pawn") {
-            let maxWalkLength = 1;
-            if (state.turn === "white" && from.row === 6) {
-                maxWalkLength = 2;
-            } else if (state.turn === "black" && from.row === 1) {
-                maxWalkLength = 2;
-            }
-
-            const center = to.col === from.col && from.row === to.row
-            const field = state.board[to.row][to.col]
-
-            return (
-                to.col === from.col
-                && to.row < from.row
-                && to.row + maxWalkLength >= from.row
-                && ((center && field.piece !== null) || field.piece === null)
-                // && !(to.row <= firstInCol(getCol(to.col, state)))
-            )
-                || pawnAttack(from, to, state)
+            return pawn(from, to, state)
         } else if (pieceType === "bishop") {
             return ((from.col - to.col) + (from.row - to.row)) % 2 === 0
                 && state.board[to.row][to.col].team !== state.turn
                 && (to.col - from.col) === (from.row - to.row) || (from.col - to.col) === (from.row - to.row)
                 && state.board[to.row][to.col].team !== state.turn
         } else if (pieceType == "knight") {
-            return (from.col + 2 == to.col && from.row + 1 == to.row
-                || from.col - 2 == to.col && from.row - 1 == to.row
-                || from.col + 2 == to.col && from.row - 1 == to.row
-                || from.col - 2 == to.col && from.row + 1 == to.row
-                || from.col - 1 == to.col && from.row + 2 == to.row
-                || from.col + 1 == to.col && from.row + 2 == to.row
-                || from.col + 1 == to.col && from.row - 2 == to.row
-                || from.col - 1 == to.col && from.row - 2 == to.row)
-                && state.board[to.row][to.col].team !== state.turn
+            return knight(from, to, state)
         } else if (pieceType == "king") {
             return to.col === from.col || to.row === from.row
         } else if (pieceType == "rook") {
