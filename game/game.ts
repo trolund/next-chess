@@ -1,5 +1,3 @@
-import { validator } from "./validator"
-
 export module chess {
 
 
@@ -25,11 +23,10 @@ export module chess {
         board: board;
         piecesTaken: field[];
         turn: team;
-        //  orientation: team; // the team in the bottom of the board.
     }
 
     // formatting debug 
-    const formatPos = (pos: pos): string => `{${pos.row}, ${pos.col}}`
+    const formatPos = (pos: pos): string => `${notation(pos)} - (${pos.row}, ${pos.col})`
 
     // get color of board
     const getBoardColor = (row: number, col: number): team => (row + col) % 2 == 0 ? "white" : "black"
@@ -82,6 +79,10 @@ export module chess {
         }
 
         const getTeam = (char: string): team => {
+            if (!char) {
+                return null
+            }
+
             if (char == char.toUpperCase()) {
                 return "black"
             }
@@ -90,6 +91,10 @@ export module chess {
         }
 
         const getPiece = (input: simplePiece): piece => {
+            if (!input) {
+                return null
+            }
+
             const sp = input.toUpperCase()
 
             if (sp === "K") {
@@ -134,6 +139,26 @@ export module chess {
 
     export const createGame = (): gameState => {
         return { board: createNewBoard(), piecesTaken: [], turn: "white" }
+    }
+
+    // false if SimpleBoard is NOT valid
+    const validateSizeOfSimpleBoard = (sb: simpleBoard): boolean => {
+        debugger
+        const boardSize = 8;
+        if (sb.length !== boardSize) {
+            return false;
+        } else {
+            return sb.every(x => x.length === boardSize)
+        }
+    }
+
+    export const createTestGame = (sb: simpleBoard, turn: team = "white", piecesTaken: field[] = []): gameState => {
+
+        if (!validateSizeOfSimpleBoard(sb)) {
+            throw new Error("test board is not the correct size!")
+        }
+
+        return { board: createNewBoardFromSimpleBoard(sb), piecesTaken, turn }
     }
 
     // not done

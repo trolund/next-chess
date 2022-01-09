@@ -10,18 +10,27 @@ interface HomeProps {
   dataStore?: DataStore;
 };
 
-const testCase = [["K", "#", "#", "#", "#", "#", "#"],
-["#", "#", "#", "#", "#", "#", "#"],
-["#", "#", "#", "#", "#", "#", "#"],
-["#", "#", "#", "#", "#", "#", "#"],
-["#", "#", "#", "#", "#", "#", "#"],
-["#", "#", "#", "#", "#", "#", "#"],
-["#", "#", "#", "#", "#", "#", "#"]]
 
 
 function Home(props: HomeProps): JSX.Element {
 
-  const [gameState, setGameState] = useState<chess.gameState>(chess.createGame());
+  const testCase: chess.simpleBoard = [["#", "#", "#", "#", "#", "#", "#", "#"],
+  ["#", "#", "#", "#", "#", "#", "#", "#"],
+  ["#", "#", "#", "#", "K", "#", "#", "#"],
+  ["#", "#", "#", "#", "#", "#", "#", "#"],
+  ["#", "#", "#", "#", "k", "#", "#", "#"],
+  ["#", "#", "#", "#", "#", "#", "#", "#"],
+  ["#", "#", "#", "#", "#", "#", "#", "#"],
+  ["#", "#", "#", "#", "#", "#", "#", "#"]]
+
+  console.log(testCase);
+  //const startState = chess.createGame()
+  const startState = chess.createTestGame(testCase)
+
+
+
+
+  const [gameState, setGameState] = useState<chess.gameState>(startState);
   const [selectedField, setSelectedField] = useState<chess.field | null>(null);
   // const [validMoves, setValidMoves] = useState<chess.pos[]>();
 
@@ -68,7 +77,6 @@ function Home(props: HomeProps): JSX.Element {
       </Head>
 
       <main className={styles.main}>
-        {/* <button onClick={() => setState(chess.rotateBoard(gameState))}>rotate</button> */}
         <div className={styles.grid}>
           <div>
             {gameState.piecesTaken.filter(f => f.team === 'black').map(field => <div><Image height="30%" width="30%" src={`/img/${field.team}-${field.piece}.svg`} /></div>)}
