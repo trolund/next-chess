@@ -38,9 +38,9 @@ const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onCl
 
     const theLabel = (label: string, labelPos: labelPos) => {
         if (labelPos === "LEFT") {
-            return <p style={{ position: "absolute", marginTop: "calc(-(var(--field-size))) " }}>{label}</p>
+            return <p style={{ position: "absolute", marginTop: "calc((var(--field-size)/2 - 6px) * -1)", fontSize: "0.7rem", opacity: 0.5 }}>{label}</p>
         } else {
-            return <p style={{ position: "absolute", marginLeft: "calc(var(--field-size) - var(--field-size)/2)" }}>{label}</p>
+            return <p style={{ position: "absolute", marginLeft: "calc((var(--field-size)/2 + 14px))", fontSize: "0.7rem", marginTop: "18px", opacity: 0.5 }}>{label}</p>
         }
     }
 
