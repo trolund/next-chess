@@ -15,9 +15,13 @@ interface PieceProps {
     turn?: chess.team;
     selected?: boolean | undefined | null;
     debug?: boolean;
+    leftLabel?: string | null;
+    bottomLabel?: string | null;
 }
 
-const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onClick, highlight, turn, selected, debug }) => {
+type labelPos = "BOTTOM" | "LEFT"
+
+const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onClick, highlight, turn, selected, debug, leftLabel, bottomLabel }) => {
 
 
     const getColor = (isBlack: boolean): string => isBlack ? "var(--white-color)" : "var(--black-color)"
@@ -32,6 +36,14 @@ const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onCl
         }
     }
 
+    const theLabel = (label: string, labelPos: labelPos) => {
+        if (labelPos === "LEFT") {
+            return <p style={{ position: "absolute", marginTop: "calc(-(var(--field-size))) " }}>{label}</p>
+        } else {
+            return <p style={{ position: "absolute", marginLeft: "calc(var(--field-size) - var(--field-size)/2)" }}>{label}</p>
+        }
+    }
+
     return (
         <div className={className + (highlight ? (" " + styles.highlight) : "") + (selected ? (" " + styles.selected) : "")}
             onClick={() => {
@@ -42,8 +54,11 @@ const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onCl
                 color: getColor(field.color === "black"),
                 cursor: cursor()
             }}>
+            {leftLabel && theLabel(leftLabel, "LEFT")}
+            {bottomLabel && theLabel(bottomLabel, "BOTTOM")}
             {debug && <div style={{ position: "absolute" }}>{row}, {col}</div>}
             {<Image height="60%" width="60%" src={`/img/${field.team}-${field.piece}.svg`} />}
+
         </div>
     );
 }

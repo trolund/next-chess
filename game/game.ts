@@ -79,7 +79,7 @@ export module chess {
         }
 
         const getTeam = (char: string): team => {
-            if (!char) {
+            if (!char || char === "#") {
                 return null
             }
 
@@ -143,7 +143,6 @@ export module chess {
 
     // false if SimpleBoard is NOT valid
     const validateSizeOfSimpleBoard = (sb: simpleBoard): boolean => {
-        debugger
         const boardSize = 8;
         if (sb.length !== boardSize) {
             return false;
@@ -180,7 +179,7 @@ export module chess {
         if (from.team !== teamsTurn) throw new Error("This price is not owned by player " + teamsTurn)
 
         // fail if your own piece is on the spot you will move to
-        if (from.team === to.team) throw new Error("You can not take your own piece")
+        if (from.team === to.team) throw new Error("You can not take your own piece : " + to.team + " " + from.team)
 
         // do the actual move 
         const tempTeam = from.team;
@@ -338,11 +337,13 @@ export module chess {
         }
     }
 
-
-
     export const notation = (pos: chess.pos): string => {
         const col = ["A", "B", "C", "D", "E", "F", "G", "H"]
-
         return `${8 - pos.row}${col[pos.col]}`
+    }
+
+    export const notationComponents = (pos: chess.pos): { number: number, char: string } => {
+        const col = ["A", "B", "C", "D", "E", "F", "G", "H"]
+        return { number: 8 - pos.row, char: col[pos.col] }
     }
 }
