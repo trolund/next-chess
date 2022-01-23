@@ -76,6 +76,14 @@ export module chess {
         return { board: createNewBoard(), piecesTaken: [], turn: "white" }
     }
 
+    export const rotateBoard = (state: gameState): gameState => {
+        return {
+            ...state,
+            board: state.board.map(row => row.reverse()).reverse(),
+            //orientation: state.orientation === "white" ? "black" : "white"
+        }
+    }
+
     // not done
     export const move = (fromPos: pos, toPos: pos, prevState: gameState): gameState => {
 
@@ -204,6 +212,12 @@ export module chess {
         return true;
     }
 
+    const isNotMyPiece = (from: pos, to: pos, state: gameState) => {
+        const fromField = state.board[from.row][from.col]
+        const toField = state.board[to.row][to.col]
+        return fromField.team !== toField.team
+    }
+
     const pawnAttack = (from: chess.pos, to: chess.pos, state: chess.gameState): boolean => {
         const direction = state.turn === "white" ? 1 : -1
 
@@ -220,14 +234,6 @@ export module chess {
             return false
         }
     }
-
-    // export const rotateBoard = (state: gameState): gameState => {
-    //     return {
-    //         ...state,
-    //         board: state.board.map(row => row.reverse()).reverse(),
-    //         orientation: state.orientation === "white" ? "black" : "white"
-    //     }
-    // }
 
     const pawn = (from: pos, to: pos, state: gameState) => {
         let maxWalkLength = 1;
@@ -274,7 +280,7 @@ export module chess {
     }
 
     const king = (from: pos, to: pos, state: gameState) => {
-        return (to.col === from.col && isPieceBetweenCol(from, to, state)) || (to.row === from.row && isPieceBetweenRow(from, to, state))
+        return (to.col === from.col && isNotMyPiece(from, to, state) && isPieceBetweenCol(from, to, state)) || (to.row === from.row && isNotMyPiece(from, to, state) && isPieceBetweenRow(from, to, state))
     }
 
     export const isValidMove = (from: pos, to: pos, state: gameState): boolean => {
