@@ -21,7 +21,6 @@ type labelPos = "BOTTOM" | "LEFT"
 
 const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onClick, highlight, turn, selected, debug, leftLabel, bottomLabel }) => {
 
-
     const getColor = (isBlack: boolean): string => isBlack ? "var(--white-color)" : "var(--black-color)"
 
     const cursor = () => {

@@ -154,6 +154,56 @@ export module chess {
         return state.board.map(d => d[rowIndex]);
     }
 
+    const isPieceBetweenCol = (from: pos, to: pos, state: gameState) => {
+
+        if (from.col !== to.col) {
+            return false;
+        }
+
+        const arrayToInvestigate: field[] = []
+
+        state.board.forEach(row => {
+            arrayToInvestigate.push(row[from.col])
+        })
+
+        for (let i = from.row; i > to.row; i--) {
+            if (arrayToInvestigate[i].piece !== null && i !== from.row) {
+                return false;
+            }
+        }
+
+        for (let i = from.row; i < to.row; i++) {
+            if (arrayToInvestigate[i].piece !== null && i !== from.row) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    const isPieceBetweenRow = (from: pos, to: pos, state: gameState) => {
+
+        if (from.row !== to.row) {
+            return false;
+        }
+
+        const arrayToInvestigate: field[] = state.board[from.row]
+
+        for (let i = from.col; i > to.col; i--) {
+            if (arrayToInvestigate[i].piece !== null && i !== from.col) {
+                return false;
+            }
+        }
+
+        for (let i = from.col; i < to.col; i++) {
+            if (arrayToInvestigate[i].piece !== null && i !== from.col) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     const pawnAttack = (from: chess.pos, to: chess.pos, state: chess.gameState): boolean => {
         const direction = state.turn === "white" ? 1 : -1
 
@@ -223,6 +273,10 @@ export module chess {
             && state.board[to.row][to.col].team !== state.turn
     }
 
+    const king = (from: pos, to: pos, state: gameState) => {
+        return (to.col === from.col && isPieceBetweenCol(from, to, state)) || (to.row === from.row && isPieceBetweenRow(from, to, state))
+    }
+
     export const isValidMove = (from: pos, to: pos, state: gameState): boolean => {
         const pieceField: field = state.board[from.row][from.col];
         const toField: field = state.board[to.row][to.col];
@@ -243,7 +297,7 @@ export module chess {
         } else if (pieceType == "knight") {
             return knight(from, to, state)
         } else if (pieceType == "king") {
-            return to.col === from.col || to.row === from.row
+            return king(from, to, state)
         } else if (pieceType == "rook") {
             return to.col === from.col || to.row === from.row
         } else if (pieceType == "queen") {
