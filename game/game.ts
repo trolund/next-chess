@@ -283,6 +283,64 @@ export module chess {
         return (to.col === from.col && isNotMyPiece(from, to, state) && isPieceBetweenCol(from, to, state)) || (to.row === from.row && isNotMyPiece(from, to, state) && isPieceBetweenRow(from, to, state))
     }
 
+    const isPieceBetweenDiagonal = (from: pos, to: pos, state: gameState) => {
+        const lowToHigh: field[] = []
+        const highToLow: field[] = []
+
+        let res = true;
+
+        state.board.forEach(row =>
+            row.forEach(col => {
+                const to = col.pos
+                // kan simplifiseres!!!!!
+                if (to && (((from.col - to.col) + (from.row - to.row)) % 2 === 0
+                    && (to.col - from.col) === (from.row - to.row) || (from.col - to.col) === (from.row - to.row)
+                    && state.board[to.row][to.col].team !== state.turn
+                    && (to.col - from.col) === (from.row + to.row) || (from.col - to.col) === (from.row + to.row))) {
+                    lowToHigh.push(col)
+                    res = false
+                }
+            }))
+
+        state.board.forEach(row =>
+            row.forEach(col => {
+                const to = col.pos
+                if (to && ((from.col - to.col) + (from.row - to.row)) % 2 === 0 && (from.col - to.col) === (from.row - to.row)) {
+                    highToLow.push(col)
+                    res = false
+                }
+            }))
+
+        // console.log(lowToHigh);
+        // console.log(highToLow);
+
+
+        // const b = lowToHigh.some(x => x.pos && x.pos?.col == to.col && x.pos?.row == to.row)
+
+        // for (let i = 0; i < lowToHigh.length; i++) {
+        //     if (lowToHigh[i].piece !== null) {
+        //         return false;
+        //     }
+        // }
+
+        // for (let i = from.col; i > to.col; i--) {
+        //     if (highToLow[i].piece !== null) {
+        //         return false;
+        //     }
+        // }
+
+        return true;
+    }
+
+    const bishop = (from: pos, to: pos, state: gameState) => {
+
+        return ((from.col - to.col) + (from.row - to.row)) % 2 === 0
+            && state.board[to.row][to.col].team !== state.turn
+            && (to.col - from.col) === (from.row - to.row) || (from.col - to.col) === (from.row - to.row)
+            && state.board[to.row][to.col].team !== state.turn
+        // && isPieceBetweenDiagonal(from, to, state)
+    }
+
     export const isValidMove = (from: pos, to: pos, state: gameState): boolean => {
         const pieceField: field = state.board[from.row][from.col];
         const toField: field = state.board[to.row][to.col];
@@ -296,18 +354,15 @@ export module chess {
         if (pieceType === "pawn") {
             return pawn(from, to, state)
         } else if (pieceType === "bishop") {
-            return ((from.col - to.col) + (from.row - to.row)) % 2 === 0
-                && state.board[to.row][to.col].team !== state.turn
-                && (to.col - from.col) === (from.row - to.row) || (from.col - to.col) === (from.row - to.row)
-                && state.board[to.row][to.col].team !== state.turn
+            return bishop(from, to, state)
         } else if (pieceType == "knight") {
             return knight(from, to, state)
         } else if (pieceType == "king") {
             return king(from, to, state)
         } else if (pieceType == "rook") {
-            return to.col === from.col || to.row === from.row
+            return king(from, to, state)
         } else if (pieceType == "queen") {
-            return to.col === from.col || to.row === from.row
+            return king(from, to, state)
         } else {
             return false;
         }

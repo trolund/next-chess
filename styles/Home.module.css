@@ -146,6 +146,12 @@
 
 }
 
+
+.highlight {
+  cursor: pointer !important;
+}
+
+
 .highlight:before {
   content: "";
   height: var(--field-size);
@@ -164,6 +170,10 @@
   position: absolute;
   margin: -2px;
   padding: 0px;
+}
+
+.threaten {
+  cursor: pointer !important;
 }
 
 .threaten:before {
