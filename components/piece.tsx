@@ -1,8 +1,6 @@
-import { inject, observer } from "mobx-react";
 import Image from "next/image";
 import { FunctionComponent } from "react"
 import { chess } from "../game/game";
-import { DataStore } from "../stores/dataStore";
 import styles from '../styles/Home.module.css'
 
 interface PieceProps {
@@ -44,8 +42,11 @@ const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onCl
         }
     }
 
+    console.log(turn !== field.team, turn, field.team);
+
+
     return (
-        <div className={className + (highlight ? (" " + styles.highlight) : "") + (selected ? (" " + styles.selected) : "")}
+        <div className={className + " " + (highlight ? (field.team !== null && turn !== field.team) ? (styles.threaten) : (styles.highlight) : "") + " " + (selected ? (styles.selected) : "")}
             onClick={() => {
                 if (onClick) onClick({ ...field, pos: { row, col } })
             }}
