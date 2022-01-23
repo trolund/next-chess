@@ -5,6 +5,7 @@ import Board from '../components/board'
 import { DataStore } from '../stores/dataStore'
 import { useState } from 'react'
 import Image from 'next/image'
+import { test } from '../game/test'
 
 interface HomeProps {
   dataStore?: DataStore;
@@ -14,7 +15,7 @@ interface HomeProps {
 
 function Home(props: HomeProps): JSX.Element {
 
-  const testCase: chess.simpleBoard = [["#", "#", "#", "#", "#", "#", "#", "#"],
+  const testCase: test.simpleBoard = [["#", "#", "#", "#", "#", "#", "#", "#"],
   ["#", "#", "#", "#", "#", "#", "#", "#"],
   ["#", "#", "#", "#", "K", "#", "#", "#"],
   ["#", "#", "#", "#", "#", "#", "#", "#"],
@@ -23,12 +24,8 @@ function Home(props: HomeProps): JSX.Element {
   ["#", "#", "#", "#", "#", "#", "#", "#"],
   ["#", "#", "#", "#", "#", "#", "#", "#"]]
 
-  console.log(testCase);
   //const startState = chess.createGame()
-  const startState = chess.createTestGame(testCase)
-
-
-
+  const startState = test.createTestGame(testCase)
 
   const [gameState, setGameState] = useState<chess.gameState>(startState);
   const [selectedField, setSelectedField] = useState<chess.field | null>(null);
