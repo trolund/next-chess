@@ -79,6 +79,7 @@ function Home(props: HomeProps): JSX.Element {
             {gameState.piecesTaken.filter(f => f.team === 'black').map(field => <div><Image height="30%" width="30%" src={`/img/${field.team}-${field.piece}.svg`} /></div>)}
           </div>
           <Board
+            debug
             selected={selectedField}
             board={gameState.board}
             turn={gameState.turn}

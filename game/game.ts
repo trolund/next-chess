@@ -283,11 +283,63 @@ export module chess {
         return (to.col === from.col && isNotMyPiece(from, to, state) && isPieceBetweenCol(from, to, state)) || (to.row === from.row && isNotMyPiece(from, to, state) && isPieceBetweenRow(from, to, state))
     }
 
+    const lowToHighEval = (from: pos, to: pos, state: field[]) => {
+        // const rightTop = state.slice(0, from.row)
+        // const leftBottom = state.slice(from.row + 1, state.length)
+        // const index = getIndex(rightTop.reverse())
+        // const index2 = getIndex(leftBottom)
+
+        // console.log(index, index2);
+
+
+        // return !(to.row <= (index + rightTop.length)) || !(to.row <= (index2 + leftBottom.length))
+
+        for (let i = from.row; i > to.row; i--) {
+            if (state[i].piece !== null && i !== from.row) {
+                return false;
+            }
+        }
+
+        for (let i = from.row; i < to.row; i++) {
+            if (state[i].piece !== null && i !== from.row) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    const highToLowEval = (from: pos, to: pos, state: field[]) => {
+        for (let i = from.row; i > to.row; i--) {
+            if (state[i].piece !== null && i !== from.row) {
+                return false;
+            }
+        }
+
+        for (let i = from.row; i < to.row; i++) {
+            if (state[i].piece !== null && i !== from.row) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // const getIndex = (a: field[]) => {
+    //     let index = 7;
+
+    //     for (let i = 0; i < a.length; i++) {
+    //         if (a[i].piece !== null) {
+    //             index = i;
+    //         }
+    //     }
+
+    //     return index;
+    // }
+
     const isPieceBetweenDiagonal = (from: pos, to: pos, state: gameState) => {
         const lowToHigh: field[] = []
         const highToLow: field[] = []
-
-        let res = true;
 
         state.board.forEach(row =>
             row.forEach(col => {
@@ -295,10 +347,10 @@ export module chess {
                 // kan simplifiseres!!!!!
                 if (to && (((from.col - to.col) + (from.row - to.row)) % 2 === 0
                     && (to.col - from.col) === (from.row - to.row) || (from.col - to.col) === (from.row - to.row)
-                    && state.board[to.row][to.col].team !== state.turn
-                    && (to.col - from.col) === (from.row + to.row) || (from.col - to.col) === (from.row + to.row))) {
+                    && (to.col - from.col) === (from.row + to.row) || (from.col - to.col) === (from.row + to.row)
+                    && !(to && ((from.col - to.col) + (from.row - to.row)) % 2 === 0 && (from.col - to.col) === (from.row - to.row))
+                )) {
                     lowToHigh.push(col)
-                    res = false
                 }
             }))
 
@@ -307,38 +359,33 @@ export module chess {
                 const to = col.pos
                 if (to && ((from.col - to.col) + (from.row - to.row)) % 2 === 0 && (from.col - to.col) === (from.row - to.row)) {
                     highToLow.push(col)
-                    res = false
                 }
             }))
 
-        // console.log(lowToHigh);
-        // console.log(highToLow);
+        console.log(lowToHigh, highToLow);
 
 
-        // const b = lowToHigh.some(x => x.pos && x.pos?.col == to.col && x.pos?.row == to.row)
+        const x = lowToHigh.find(x => x.pos && x.pos.col === to.col && x.pos.row === to.row)
+        const y = highToLow.find(f => f.pos && f.pos.col === to.col && f.pos.row === to.row)
 
-        // for (let i = 0; i < lowToHigh.length; i++) {
-        //     if (lowToHigh[i].piece !== null) {
-        //         return false;
-        //     }
-        // }
+        if (x) {
+            return lowToHighEval(from, to, lowToHigh)
+        } else if (y) {
+            return highToLowEval(from, to, highToLow)
+        } else {
+            return true;
+        }
 
-        // for (let i = from.col; i > to.col; i--) {
-        //     if (highToLow[i].piece !== null) {
-        //         return false;
-        //     }
-        // }
-
-        return true;
+        return true
     }
 
     const bishop = (from: pos, to: pos, state: gameState) => {
-
-        return ((from.col - to.col) + (from.row - to.row)) % 2 === 0
+        return isPieceBetweenDiagonal(from, to, state)
+            && ((from.col - to.col) + (from.row - to.row)) % 2 === 0
             && state.board[to.row][to.col].team !== state.turn
             && (to.col - from.col) === (from.row - to.row) || (from.col - to.col) === (from.row - to.row)
             && state.board[to.row][to.col].team !== state.turn
-        // && isPieceBetweenDiagonal(from, to, state)
+
     }
 
     export const isValidMove = (from: pos, to: pos, state: gameState): boolean => {
