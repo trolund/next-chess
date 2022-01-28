@@ -284,15 +284,6 @@ export module chess {
     }
 
     const lowToHighEval = (from: pos, to: pos, state: field[]) => {
-        // const rightTop = state.slice(0, from.row)
-        // const leftBottom = state.slice(from.row + 1, state.length)
-        // const index = getIndex(rightTop.reverse())
-        // const index2 = getIndex(leftBottom)
-
-        // console.log(index, index2);
-
-
-        // return !(to.row <= (index + rightTop.length)) || !(to.row <= (index2 + leftBottom.length))
 
         for (let i = from.row; i > to.row; i--) {
             if (state[i].piece !== null && i !== from.row) {
@@ -310,6 +301,7 @@ export module chess {
     }
 
     const highToLowEval = (from: pos, to: pos, state: field[]) => {
+
         for (let i = from.row; i > to.row; i--) {
             if (state[i].piece !== null && i !== from.row) {
                 return false;
@@ -325,73 +317,51 @@ export module chess {
         return true;
     }
 
-    // const getIndex = (a: field[]) => {
-    //     let index = 7;
+    const diagonals = (board: board, pos: pos) => {
+        const cellX = pos.row
+        const cellY = pos.col
 
-    //     for (let i = 0; i < a.length; i++) {
-    //         if (a[i].piece !== null) {
-    //             index = i;
-    //         }
-    //     }
-
-    //     return index;
-    // }
+        let forward: field[] = []; // diagonal according forward slash shape: / 
+        let backward: field[] = []; // diagonal according backslash shape: \
+        let n = board.length;
+        board.forEach((row, y) => {
+            let x = cellX - (cellY - y);
+            if (x >= 0 && x < n) backward.push(row[x]);
+            x = cellX + (cellY - y);
+            if (x >= 0 && x < n) forward.push(row[x]);
+        });
+        return [forward, backward];
+    }
 
     const isPieceBetweenDiagonal = (from: pos, to: pos, state: gameState) => {
-        const lowToHigh: field[] = []
-        const highToLow: field[] = []
-
-        state.board.forEach(row =>
-            row.forEach(col => {
-                const to = col.pos
-                // kan simplifiseres!!!!!
-                if (to && (((from.col - to.col) + (from.row - to.row)) % 2 === 0
-                    && (to.col - from.col) === (from.row - to.row) || (from.col - to.col) === (from.row - to.row)
-                    && state.board[to.row][to.col].team !== state.turn
-                    && (to.col - from.col) === (from.row + to.row) || (from.col - to.col) === (from.row + to.row))
-                    && !(to && ((from.col - to.col) + (from.row - to.row)) % 2 === 0 && (from.col - to.col) === (from.row - to.row))
-                ) {
-                    lowToHigh.push(col)
-                }
-            }))
-
-        state.board.forEach(row =>
-            row.forEach(col => {
-                const to = col.pos
-                if (to && ((from.col - to.col) + (from.row - to.row)) % 2 === 0 && (from.col - to.col) === (from.row - to.row)) {
-                    highToLow.push(col)
-                }
-            }))
-
-        console.log(lowToHigh, highToLow);
-
+        const [lowToHigh, highToLow] = diagonals(state.board, from)
 
         const x = lowToHigh.find(x => x.pos && x.pos.col === to.col && x.pos.row === to.row)
         const y = highToLow.find(f => f.pos && f.pos.col === to.col && f.pos.row === to.row)
 
         if (x) {
             return lowToHighEval(from, to, lowToHigh)
-        } else if (y) {
-            return highToLowEval(from, to, highToLow)
-        } else {
-            return true;
         }
 
-        return true
+        if (y) {
+            return lowToHighEval(from, to, highToLow)
+        }
+
+        return true;
     }
 
     const bishop = (from: pos, to: pos, state: gameState) => {
         return isPieceBetweenDiagonal(from, to, state)
             && ((from.col - to.col) + (from.row - to.row)) % 2 === 0
             && state.board[to.row][to.col].team !== state.turn
-            && (to.col - from.col) === (from.row - to.row) || (from.col - to.col) === (from.row - to.row)
+            && ((to.col - from.col) === (from.row - to.row) || (from.col - to.col) === (from.row - to.row))
             && state.board[to.row][to.col].team !== state.turn
 
     }
 
     export const isValidMove = (from: pos, to: pos, state: gameState): boolean => {
         const pieceField: field = state.board[from.row][from.col];
-        const toField: field = state.board[to.row][to.col];
+        // const toField: field = state.board[to.row][to.col];
 
         const pieceType = pieceField.piece;
 
