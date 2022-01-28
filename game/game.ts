@@ -347,9 +347,10 @@ export module chess {
                 // kan simplifiseres!!!!!
                 if (to && (((from.col - to.col) + (from.row - to.row)) % 2 === 0
                     && (to.col - from.col) === (from.row - to.row) || (from.col - to.col) === (from.row - to.row)
-                    && (to.col - from.col) === (from.row + to.row) || (from.col - to.col) === (from.row + to.row)
+                    && state.board[to.row][to.col].team !== state.turn
+                    && (to.col - from.col) === (from.row + to.row) || (from.col - to.col) === (from.row + to.row))
                     && !(to && ((from.col - to.col) + (from.row - to.row)) % 2 === 0 && (from.col - to.col) === (from.row - to.row))
-                )) {
+                ) {
                     lowToHigh.push(col)
                 }
             }))
