@@ -285,14 +285,14 @@ export module chess {
 
     const lowToHighEval = (from: pos, to: pos, state: field[]) => {
 
-        for (let i = from.row; i > to.row; i--) {
-            if (state[i].piece !== null && i !== from.row) {
+        for (let i = from.col; i > to.col; i--) {
+            if (state[i].piece !== null && i !== from.col) {
                 return false;
             }
         }
 
-        for (let i = from.row; i < to.row; i++) {
-            if (state[i].piece !== null && i !== from.row) {
+        for (let i = from.col; i < to.col; i++) {
+            if (state[i].piece !== null && i !== from.col) {
                 return false;
             }
         }
@@ -318,23 +318,28 @@ export module chess {
     }
 
     const diagonals = (board: board, pos: pos) => {
-        const cellX = pos.row
-        const cellY = pos.col
+        const cellX = pos.col
+        const cellY = pos.row
 
-        let forward: field[] = []; // diagonal according forward slash shape: / 
-        let backward: field[] = []; // diagonal according backslash shape: \
-        let n = board.length;
+        let forward: field[] = [] // diagonal according forward slash shape: / 
+        let backward: field[] = [] // diagonal according backslash shape: \
+
+        let n = board.length
+
         board.forEach((row, y) => {
             let x = cellX - (cellY - y);
-            if (x >= 0 && x < n) backward.push(row[x]);
+            if (x >= 0 && x < n) backward.push(row[x])
             x = cellX + (cellY - y);
-            if (x >= 0 && x < n) forward.push(row[x]);
-        });
-        return [forward, backward];
+            if (x >= 0 && x < n) forward.push(row[x])
+        })
+        return [forward, backward]
     }
 
     const isPieceBetweenDiagonal = (from: pos, to: pos, state: gameState) => {
         const [lowToHigh, highToLow] = diagonals(state.board, from)
+
+        console.log(highToLow);
+
 
         const x = lowToHigh.find(x => x.pos && x.pos.col === to.col && x.pos.row === to.row)
         const y = highToLow.find(f => f.pos && f.pos.col === to.col && f.pos.row === to.row)
