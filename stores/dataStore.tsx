@@ -1,5 +1,5 @@
 import { observable } from "mobx";
-import { enableStaticRendering, useStaticRendering } from "mobx-react";
+import { enableStaticRendering } from "mobx-react";
 import { chess } from "../game/game";
 
 const isServer = typeof window === "undefined";
