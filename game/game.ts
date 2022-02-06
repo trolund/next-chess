@@ -283,16 +283,22 @@ export module chess {
         return (to.col === from.col && isNotMyPiece(from, to, state) && isPieceBetweenCol(from, to, state)) || (to.row === from.row && isNotMyPiece(from, to, state) && isPieceBetweenRow(from, to, state))
     }
 
-    const lowToHighEval = (from: pos, to: pos, state: field[]) => {
+    const lowToHighEval = (from: pos, to: pos, state: field[], boolean: boolean) => {
 
-        for (let i = from.col; i > to.col; i--) {
-            if (state[i].piece !== null && i !== from.col) {
+        const b = boolean ? -3 : 0
+        
+        for (let i = from.col; i > to.col; i--) {   
+            const index = i-b; 
+            if ((index >= 0 && index < state.length && i !== from.col) && state[index].piece !== null) {
                 return false;
             }
         }
 
+        const b2 = boolean ? 0 : 0
+
         for (let i = from.col; i < to.col; i++) {
-            if (state[i].piece !== null && i !== from.col) {
+            const index = i-b2; 
+            if ((index >= 0 && index < state.length && i !== from.col) && state[index].piece !== null) {
                 return false;
             }
         }
@@ -345,11 +351,11 @@ export module chess {
         const y = highToLow.find(f => f.pos && f.pos.col === to.col && f.pos.row === to.row)
 
         if (x) {
-            return lowToHighEval(from, to, lowToHigh)
+            return lowToHighEval(from, to, lowToHigh, false)
         }
 
         if (y) {
-            return lowToHighEval(from, to, highToLow)
+            return lowToHighEval(from, to, highToLow, true)
         }
 
         return true;
