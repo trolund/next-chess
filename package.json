@@ -5,10 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "jest"
   },
   "dependencies": {
     "@babel/plugin-proposal-decorators": "^7.16.7",
+    "fs": "^0.0.1-security",
     "mobx": "^6.3.10",
     "mobx-react": "^7.2.1",
     "mobx-react-lite": "^3.2.3",
@@ -19,7 +21,11 @@
     "react-dom": "17.0.2"
   },
   "devDependencies": {
+    "@types/jest": "^27.4.0",
+    "@types/node": "^17.0.17",
     "@types/react": "^17.0.38",
+    "jest": "^27.5.1",
+    "ts-node": "^10.5.0",
     "typescript": "^4.5.4"
   }
 }

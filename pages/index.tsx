@@ -5,7 +5,8 @@ import Board from '../components/board'
 import { DataStore } from '../stores/dataStore'
 import { useState } from 'react'
 import Image from 'next/image'
-import { test } from '../game/test'
+import { testUtil } from '../test/utils/testUtil'
+import { loadTestCase } from '../test/utils/fileLoader'
 
 interface HomeProps {
   dataStore?: DataStore;
@@ -15,17 +16,17 @@ interface HomeProps {
 
 function Home(props: HomeProps): JSX.Element {
 
-  const testCase: test.simpleBoard = [["#", "#", "#", "#", "#", "#", "#", "#"],
-  ["B", "#", "#", "#", "#", "#", "#", "#"],
-  ["#", "#", "#", "#", "B", "#", "B", "#"],
-  ["#", "B", "#", "#", "b", "#", "#", "#"],
-  ["#", "#", "b", "b", "#", "#", "B", "#"],
-  ["#", "#", "#", "#", "#", "#", "#", "#"],
-  ["#", "#", "#", "#", "P", "#", "#", "#"],
-  ["#", "B", "#", "#", "#", "#", "#", "#"]]
+  const testCase: testUtil.simpleBoard = [["#", "#", "#", "#", "#", "#", "#", "#"],
+                                      ["B", "#", "#", "#", "#", "#", "#", "#"],
+                                      ["#", "#", "#", "#", "B", "#", "B", "#"],
+                                      ["#", "B", "#", "#", "b", "#", "#", "#"],
+                                      ["#", "#", "b", "b", "#", "#", "B", "#"],
+                                      ["#", "#", "#", "#", "#", "#", "#", "#"],
+                                      ["#", "#", "#", "#", "P", "#", "#", "#"],
+                                      ["#", "B", "#", "#", "#", "#", "#", "#"]]
 
   //const startState = chess.createGame()
-  const startState = test.createTestGame(testCase)
+  const startState = testUtil.createTestGame(testCase)
 
   const [gameState, setGameState] = useState<chess.gameState>(startState);
   const [selectedField, setSelectedField] = useState<chess.field | null>(null);

@@ -294,7 +294,7 @@ export module chess {
             }
         }
 
-        const b2 = boolean ? 0 : 0
+        const b2 = boolean ? 0 : 3
 
         for (let i = from.col; i < to.col; i++) {
             const index = i-b2; 
@@ -343,9 +343,6 @@ export module chess {
 
     const isPieceBetweenDiagonal = (from: pos, to: pos, state: gameState) => {
         const [lowToHigh, highToLow] = diagonals(state.board, from)
-
-        console.log(highToLow);
-
 
         const x = lowToHigh.find(x => x.pos && x.pos.col === to.col && x.pos.row === to.row)
         const y = highToLow.find(f => f.pos && f.pos.col === to.col && f.pos.row === to.row)

@@ -1,6 +1,6 @@
-import { chess } from './game'
+import { chess } from '../../game/game'
 
-export module test {
+export module testUtil {
 
     export type simplePiece = "k" | "K" | "q" | "Q" | "r" | "R" | "b" | "B" | "n" | "N" | "p" | "P" | "#"
     export type simpleBoard = simplePiece[][]
@@ -87,6 +87,15 @@ export module test {
         }
 
         return { board: createNewBoardFromSimpleBoard(sb), piecesTaken, turn }
+    }
+
+    export const printBoard = (sb: chess.board) => {
+        for(let row = 0; row < 7; row++){
+            console.log("\n")
+            for(let col = 0; col < 7; col++){
+                console.log(sb[row][col])
+            }
+        }
     }
 
 
