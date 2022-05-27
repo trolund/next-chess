@@ -4,6 +4,7 @@ export module chess {
     // types
     export type team = "white" | "black" | null
     export type piece = "king" | "rook" | "bishop" | "queen" | "knight" | "pawn" | null
+    export type diagonal = "lowToHigh" | "highToLow"
 
     // export type simplePiece = "k" | "K" | "q" | "Q" | "r" | "R" | "b" | "B" | "n" | "N" | "p" | "P" | "#"
     // export type simpleBoard = simplePiece[][]
@@ -12,7 +13,7 @@ export module chess {
         team: team
         piece: piece
         color: team
-        pos?: pos;
+        pos: pos;
     }
 
     export type board = field[][]
@@ -39,23 +40,25 @@ export module chess {
 
         const getPiece = (row: number, col: number): field => {
 
+            const pos: pos = {row: row, col: col};
+
             if (row === 0) {
-                return { piece: backLineBlack[col], color: getBoardColor(row, col), team: "black" }
+                return { piece: backLineBlack[col], color: getBoardColor(row, col), team: "black", pos }
             }
 
             if (row === 7) {
-                return { piece: backLineWhite[col], color: getBoardColor(row, col), team: "white" }
+                return { piece: backLineWhite[col], color: getBoardColor(row, col), team: "white", pos }
             }
 
             if (row === 1) {
-                return { piece: "pawn", color: getBoardColor(row, col), team: "black" }
+                return { piece: "pawn", color: getBoardColor(row, col), team: "black", pos }
             }
 
             if (row === 6) {
-                return { piece: "pawn", color: getBoardColor(row, col), team: "white" }
+                return { piece: "pawn", color: getBoardColor(row, col), team: "white", pos }
             }
 
-            return { piece: null, color: getBoardColor(row, col), team: null }
+            return { piece: null, color: getBoardColor(row, col), team: null, pos }
         }
 
         const board: field[][] = []
@@ -306,6 +309,15 @@ export module chess {
         return true;
     }
 
+    const IsEmpty = (pos: pos, state: gameState) => {
+        // console.log(pos);
+        return state.board[pos.row][pos.col].piece === null
+    }
+
+    const GetPieceTeam = (pos: pos, state: gameState) => {
+        state.board[pos.row][pos.col].team
+    }
+
     const highToLowEval = (from: pos, to: pos, state: field[]) => {
 
         for (let i = from.row; i > to.row; i--) {
@@ -367,6 +379,33 @@ export module chess {
 
     }
 
+    const bishopCanMove = (from: pos, to: pos, state: gameState) => {
+
+        console.log("bishop");
+        
+
+        let pathLength = Math.abs(to.col - from.col); 
+        if (pathLength != Math.abs(to.row - from.row)) return false; // Not diagonal
+        // Also validate if the coordinates are in the 0-7 range
+
+        // Check all cells before the target
+        for (let i: number = 1; i < pathLength; i++)
+        {
+            let x = from.col + i;
+            let y = from.row + i;
+
+            if(IsEmpty({col: x, row: y}, state)) continue; // No obstacles here: keep going
+            else return false; // Obstacle found before reaching target: the move is invalid
+        }
+
+        // Check target cell
+        if (IsEmpty({col: to.col, row: to.row}, state)) return true; // No piece: move is valid
+
+        // There's a piece here: the move is valid only if we can capture
+        return GetPieceTeam({col: to.col, row: to.row}, state) === GetPieceTeam({col: from.col, row: from.row}, state);
+    }
+
+
     export const isValidMove = (from: pos, to: pos, state: gameState): boolean => {
         const pieceField: field = state.board[from.row][from.col];
         // const toField: field = state.board[to.row][to.col];
@@ -379,8 +418,8 @@ export module chess {
 
         if (pieceType === "pawn") {
             return pawn(from, to, state)
-        } else if (pieceType === "bishop") {
-            return bishop(from, to, state)
+        } else if (pieceType === "bishop") {            
+            return bishopCanMove(from, to, state) 
         } else if (pieceType == "knight") {
             return knight(from, to, state)
         } else if (pieceType == "king") {
@@ -402,5 +441,52 @@ export module chess {
     export const notationComponents = (pos: chess.pos): { number: number, char: string } => {
         const col = ["A", "B", "C", "D", "E", "F", "G", "H"]
         return { number: 8 - pos.row, char: col[pos.col] }
+    }
+
+    export const inShadow = (from: pos, to: pos, state: gameState): boolean => {
+        const [lowToHigh, highToLow] = diagonals(state.board, from)
+        const isInLowToHigh = lowToHigh.some(f => f.pos.col === to.col && f.pos.row === to.row)
+        return inBetween(from, to, isInLowToHigh ? lowToHigh : highToLow, isInLowToHigh ? "lowToHigh" : "highToLow")
+    }
+
+    export const inBetween = (from: pos, to: pos, diagonalList: field[], diagonal: diagonal): boolean => {
+
+       // const isRight = from.col > to.col 
+        const isTop = from.row < to.row 
+
+        if(diagonal === "lowToHigh"){
+            if(isTop){
+                return fromLowToHigh(from, to, diagonalList)
+            }else {
+                return fromHighToLow(from, to, diagonalList)
+            }
+        }else {
+            if(isTop){
+                return fromLowToHigh(from, to, diagonalList)
+            }else {
+                return fromHighToLow(from, to, diagonalList)
+            }
+        }
+
+        
+    }
+
+    // use row numbers
+    const fromLowToHigh = (from: pos, to: pos, diagonalList: field[]) => {
+        for (let index = from.row; index > to.row; index--) {
+            const element = diagonalList[index];
+            return element.piece !== null && from.row !== to.row 
+        }
+        return false
+    }
+
+
+    // use row numbers
+    const fromHighToLow = (from: pos, to: pos, diagonalList: field[]) => {
+        for (let index = from.row; index < to.row; index++) {
+            const element = diagonalList[index];
+            return element.piece !== null && from.row !== to.row 
+        }
+        return false
     }
 }

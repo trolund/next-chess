@@ -17,13 +17,13 @@ interface HomeProps {
 function Home(props: HomeProps): JSX.Element {
 
   const testCase: testUtil.simpleBoard = [["#", "#", "#", "#", "#", "#", "#", "#"],
-                                      ["B", "#", "#", "#", "#", "#", "#", "#"],
-                                      ["#", "#", "#", "#", "B", "#", "B", "#"],
-                                      ["#", "B", "#", "#", "b", "#", "#", "#"],
-                                      ["#", "#", "b", "b", "#", "#", "B", "#"],
-                                      ["#", "#", "#", "#", "#", "#", "#", "#"],
-                                      ["#", "#", "#", "#", "P", "#", "#", "#"],
-                                      ["#", "B", "#", "#", "#", "#", "#", "#"]]
+                                          ["B", "#", "#", "#", "#", "#", "#", "#"],
+                                          ["#", "#", "#", "#", "B", "#", "B", "#"],
+                                          ["#", "B", "#", "#", "b", "#", "#", "#"],
+                                          ["#", "#", "b", "b", "#", "#", "B", "#"],
+                                          ["#", "#", "#", "#", "#", "#", "#", "#"],
+                                          ["#", "#", "#", "#", "P", "#", "#", "#"],
+                                          ["#", "B", "#", "#", "#", "#", "#", "#"]]
 
   //const startState = chess.createGame()
   const startState = testUtil.createTestGame(testCase)
@@ -51,7 +51,7 @@ function Home(props: HomeProps): JSX.Element {
 
 
   const handleOnPieceClick = (f: chess.field) => {
-    console.log(f.pos?.row, f.pos?.col, chess.notation(f.pos!));
+    logFieldClick(f)
 
     if (selectedField) {
       const to = f.pos!;
@@ -62,6 +62,8 @@ function Home(props: HomeProps): JSX.Element {
       setSelectedField(f)
     }
   }
+
+  const logFieldClick = (f: chess.field) => console.log(`Notation: ${chess.notation(f.pos!)}, (row:${f.pos?.row},col:${f.pos?.col}), ${f.piece + ", " ?? ""} ${f.team ?? ""}`);
 
   return (
     <div className={styles.container}>
