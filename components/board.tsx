@@ -1,18 +1,20 @@
 import { FunctionComponent } from "react"
 import { chess } from "../game/game"
+import { board, field, pos, team } from "../game/types/game-types";
 import styles from '../styles/Home.module.css'
 import Piece from "./piece";
 
 interface BoardProps {
-    board: chess.board;
-    highlight?: chess.pos[];
-    pieceOnClick?: (field: chess.field) => void;
-    turn?: chess.team;
-    selected: chess.field | null;
+    board: board;
+    highlight?: pos[];
+    pieceOnClick?: (field: field) => void;
+    turn?: team;
+    selected: field | null;
     debug?: boolean;
+    debugUseNotation?: boolean;
 }
 
-const Board: FunctionComponent<BoardProps> = ({ board, highlight, pieceOnClick, turn, selected, debug }) => {
+const Board: FunctionComponent<BoardProps> = ({ board, highlight, pieceOnClick, turn, selected, debug, debugUseNotation }) => {
 
     const label = (row: number, col: number): { bottom: string | null, left: string | null } => {
         const { number, char } = chess.notationComponents({ col, row })
@@ -45,6 +47,7 @@ const Board: FunctionComponent<BoardProps> = ({ board, highlight, pieceOnClick, 
                         row={row}
                         field={f}
                         debug={debug}
+                        debugUseNotation={debugUseNotation}
                         bottomLabel={bottom}
                         leftLabel={left}
                     />)

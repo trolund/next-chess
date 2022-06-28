@@ -1,25 +1,27 @@
 import Image from "next/image";
 import { FunctionComponent } from "react"
 import { chess } from "../game/game";
+import { field, team } from "../game/types/game-types";
 import styles from '../styles/Home.module.css'
 
 interface PieceProps {
-    field: chess.field;
+    field: field;
     row: number;
     col: number;
     className?: string;
-    onClick?: (field: chess.field) => void;
+    onClick?: (field: field) => void;
     highlight?: boolean;
-    turn?: chess.team;
+    turn?: team;
     selected?: boolean | undefined | null;
     debug?: boolean;
+    debugUseNotation?: boolean;
     leftLabel?: string | null;
     bottomLabel?: string | null;
 }
 
 type labelPos = "BOTTOM" | "LEFT"
 
-const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onClick, highlight, turn, selected, debug, leftLabel, bottomLabel }) => {
+const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onClick, highlight, turn, selected, debug, debugUseNotation, leftLabel, bottomLabel }) => {
 
     const getColor = (isBlack: boolean): string => isBlack ? "var(--white-color)" : "var(--black-color)"
 
@@ -53,7 +55,7 @@ const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onCl
             }}>
             {leftLabel && theLabel(leftLabel, "LEFT")}
             {bottomLabel && theLabel(bottomLabel, "BOTTOM")}
-            {debug && <div style={{ position: "absolute" }}>{row}, {col}</div>}
+            {debug && <div style={{ position: "absolute" }}>{debugUseNotation ? chess.notation({row, col}) : `${row}, ${col}`}</div>}
             {<Image height="60%" width="60%" src={`/img/${field.team}-${field.piece}.svg`} />}
 
         </div>

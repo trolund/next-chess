@@ -1,17 +1,15 @@
 import { chess } from '../../game/game'
+import { board, field, gameState, piece, simpleBoard, simplePiece, team, pos } from '../../game/types/game-types'
 
 export module testUtil {
 
-    export type simplePiece = "k" | "K" | "q" | "Q" | "r" | "R" | "b" | "B" | "n" | "N" | "p" | "P" | "#"
-    export type simpleBoard = simplePiece[][]
+    const createNewBoardFromSimpleBoard = (sb: simpleBoard): board => {
 
-    const createNewBoardFromSimpleBoard = (sb: simpleBoard): chess.board => {
-
-        const getField = (row: number, col: number): chess.field => {
+        const getField = (row: number, col: number): field => {
             return fromSimpleToField(sb[row][col], row, col)
         }
 
-        const getTeam = (char: string): chess.team => {
+        const getTeam = (char: string): team => {
             if (!char || char === "#") {
                 return null
             }
@@ -23,7 +21,7 @@ export module testUtil {
             return "white"
         }
 
-        const getPiece = (input: simplePiece): chess.piece => {
+        const getPiece = (input: simplePiece): piece => {
             if (!input) {
                 return null
             }
@@ -47,7 +45,7 @@ export module testUtil {
             }
         }
 
-        const fromSimpleToField = (sp: simplePiece, row: number, col: number): chess.field => {
+        const fromSimpleToField = (sp: simplePiece, row: number, col: number): field => {
             return {
                 color: chess.getBoardColor(row, col),
                 team: getTeam(sp),
@@ -56,7 +54,7 @@ export module testUtil {
             }
         }
 
-        const board: chess.field[][] = []
+        const board: field[][] = []
 
         for (var row: number = 0; row < 8; row++) {
 
@@ -80,16 +78,16 @@ export module testUtil {
         }
     }
 
-    export const createTestGame = (sb: simpleBoard, turn: chess.team = "white", piecesTaken: chess.field[] = []): chess.gameState => {
+    export const createTestGame = (sb: simpleBoard, turn: team = "white", piecesTaken: field[] = []): gameState => {
 
-        if (!validateSizeOfSimpleBoard(sb)) {
+        if (!sb || !validateSizeOfSimpleBoard(sb)) {
             throw new Error("test board is not the correct size!")
         }
 
         return { board: createNewBoardFromSimpleBoard(sb), piecesTaken, turn }
     }
 
-    export const printBoard = (sb: chess.board) => {
+    export const printBoard = (sb: board) => {
         for(let row = 0; row < 7; row++){
             console.log("\n")
             for(let col = 0; col < 7; col++){
@@ -98,5 +96,12 @@ export module testUtil {
         }
     }
 
+    export const posArrayToNotationArray = (a: pos[]): string[] => {
+        return a.map(p => chess.notation(p))
+    }
+
+    export const notationArrayToPosArray = (a: string[]): pos[] => {
+        return a.map(n => chess.toPos(n))
+    }
 
 }

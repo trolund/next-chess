@@ -7,32 +7,31 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { testUtil } from '../test/utils/testUtil'
 import { loadTestCase } from '../test/utils/fileLoader'
+import { field, gameState, pos, simpleBoard } from '../game/types/game-types'
 
 interface HomeProps {
   dataStore?: DataStore;
 };
 
-
-
 function Home(props: HomeProps): JSX.Element {
 
-  const testCase: testUtil.simpleBoard = [["#", "#", "#", "#", "#", "#", "#", "#"],
-                                          ["B", "#", "#", "#", "#", "#", "#", "#"],
-                                          ["#", "#", "#", "#", "B", "#", "B", "#"],
-                                          ["#", "B", "#", "#", "b", "#", "#", "#"],
-                                          ["#", "#", "b", "b", "#", "#", "B", "#"],
-                                          ["#", "#", "#", "#", "#", "#", "#", "#"],
-                                          ["#", "#", "#", "#", "P", "#", "#", "#"],
-                                          ["#", "B", "#", "#", "#", "#", "#", "#"]]
+  const testCase: simpleBoard = [["#", "#", "p", "#", "#", "p", "p", "#"],
+                                 ["B", "#", "#", "#", "#", "#", "#", "#"],
+                                 ["#", "#", "#", "#", "B", "#", "B", "#"],
+                                 ["#", "B", "#", "#", "b", "#", "#", "#"],
+                                 ["#", "#", "b", "b", "#", "#", "B", "K"],
+                                 ["#", "k", "#", "#", "#", "#", "#", "#"],
+                                 ["#", "#", "#", "k", "p", "#", "#", "#"],
+                                 ["#", "B", "P", "P", "#", "#", "#", "#"]]
 
-  //const startState = chess.createGame()
+  //const startState = createGame()
   const startState = testUtil.createTestGame(testCase)
 
-  const [gameState, setGameState] = useState<chess.gameState>(startState);
-  const [selectedField, setSelectedField] = useState<chess.field | null>(null);
-  // const [validMoves, setValidMoves] = useState<chess.pos[]>();
+  const [gameState, setGameState] = useState<gameState>(startState);
+  const [selectedField, setSelectedField] = useState<field | null>(null);
+  // const [validMoves, setValidMoves] = useState<pos[]>();
 
-  const setState = (s: chess.gameState) => {
+  const setState = (s: gameState) => {
     setGameState({
       board: [...s.board],
       piecesTaken: [...s.piecesTaken],
@@ -40,7 +39,7 @@ function Home(props: HomeProps): JSX.Element {
     })
   }
 
-  const doMove = (from: chess.pos, to: chess.pos) => {
+  const doMove = (from: pos, to: pos) => {
     try {
       setState(chess.move(from, to, gameState))
       console.log(chess.notation(from) + " to " + chess.notation(to))
@@ -50,7 +49,7 @@ function Home(props: HomeProps): JSX.Element {
   }
 
 
-  const handleOnPieceClick = (f: chess.field) => {
+  const handleOnPieceClick = (f: field) => {
     logFieldClick(f)
 
     if (selectedField) {
@@ -63,7 +62,7 @@ function Home(props: HomeProps): JSX.Element {
     }
   }
 
-  const logFieldClick = (f: chess.field) => console.log(`Notation: ${chess.notation(f.pos!)}, (row:${f.pos?.row},col:${f.pos?.col}), ${f.piece + ", " ?? ""} ${f.team ?? ""}`);
+  const logFieldClick = (f: field) => console.log(`Notation: ${chess.notation(f.pos!)}, (row:${f.pos?.row},col:${f.pos?.col}), ${f.piece + ", " ?? ""} ${f.team ?? ""}`);
 
   return (
     <div className={styles.container}>
@@ -83,6 +82,7 @@ function Home(props: HomeProps): JSX.Element {
           </div>
           <Board
             debug
+            debugUseNotation
             selected={selectedField}
             board={gameState.board}
             turn={gameState.turn}
