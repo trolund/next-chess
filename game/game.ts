@@ -120,6 +120,7 @@ export module chess {
         }
 
         const validMoves: pos[] = [];
+
         state.board.forEach((row, i) => {
             row.forEach((field, j) => {
                 const pos: pos = { row: i, col: j };
@@ -137,7 +138,17 @@ export module chess {
     }
 
     export const isValidMove = (from: pos, to: pos, state: gameState): boolean => {
-        const pieceField: field = state.board[from.row][from.col];
+        let pieceField: field
+
+        try{
+            console.log(from.row, from.col, state.board);
+            
+            pieceField = state.board[from.row][from.col];
+        }catch(e: any){
+            console.log(e)
+            return false
+        }
+        
         // const toField: field = state.board[to.row][to.col];
 
         const pieceType = pieceField.piece;
@@ -165,7 +176,7 @@ export module chess {
 
     export const notation = (pos: pos): string => {
         const col = ["A", "B", "C", "D", "E", "F", "G", "H"]
-        return `${8 - pos.row}${col[pos.col]}`
+        return `${col[pos.col]}${8 - pos.row}`
     }
 
     export const notationComponents = (pos: pos): { number: number, char: string } => {
@@ -180,7 +191,7 @@ export module chess {
 
         if(notation.length !== 2 && colOptions.includes(col) && (row > 0 && row < 9)) new Error("Input not correct notation : " + col + row)
 
-        return {col: colOptions.indexOf(col) + 1, row}
+        return { col: colOptions.indexOf(col) + 1, row } as pos
     }
 
 

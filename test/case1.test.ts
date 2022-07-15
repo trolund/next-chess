@@ -5,13 +5,7 @@ import { testCase } from "../game/types/game-types";
 
 it('All file cases', () => {
   const cases = loadAllTestCases()
-  console.log("***" + cases.length);
-  console.log("***" + cases[0]);
-
   cases.forEach(c => {
-    console.log(c);
-    
-
     console.log("----------------------------------");
     console.log("Test case: " + c?.name);
     if(c?.comment) console.log("comment: " + c.comment)
@@ -21,7 +15,7 @@ it('All file cases', () => {
     c.subCases.forEach(sc => {
       console.log("name: " + sc.name)
       if(sc.comment) console.log("comment: " + sc.comment)
-      const validMoves = chess.allValidMoves({row: 0, col: 2}, state) 
+      const validMoves = chess.allValidMoves(sc.pieceToMove, state) 
       expect(sc.expected.sort()).toEqual(validMoves.sort())
     })
     console.log("----------------------------------");
