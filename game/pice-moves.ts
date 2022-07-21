@@ -172,7 +172,6 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
     }
 
     const IsEmpty = (pos: pos, state: gameState) => {
-        // console.log(pos);
         return state.board[pos.row][pos.col]?.piece === null
     }
 

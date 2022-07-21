@@ -114,7 +114,7 @@ export module chess {
         }
 
         if(typeof fromPos === "string"){
-            fromPosParsed = toPos(fromPos)
+            fromPosParsed = toPos(fromPos)            
         }else {
             fromPosParsed = fromPos;
         }
@@ -141,11 +141,8 @@ export module chess {
         let pieceField: field
 
         try{
-            console.log(from.row, from.col, state.board);
-            
             pieceField = state.board[from.row][from.col];
         }catch(e: any){
-            console.log(e)
             return false
         }
         
@@ -186,12 +183,20 @@ export module chess {
 
     export const toPos = (notation: string): pos => {
         const colOptions = ["A", "B", "C", "D", "E", "F", "G", "H"]
-        const row = Number.parseInt(notation[1]);
-        const col = notation[0];
+        const row: number = Number.parseInt(notation[1])
+        const col: string = notation[0]
 
-        if(notation.length !== 2 && colOptions.includes(col) && (row > 0 && row < 9)) new Error("Input not correct notation : " + col + row)
+        if(notation.length !== 2 
+            // || row === NaN 
+            // || typeof col !== 'string'
+            // || !colOptions.includes(String(col)) 
+            // || (row > 0 && row < 9) 
+            // || colOptions.indexOf(col) === -1 
+            || (8 - row) < 0) {
+                throw "Input not correct notation : " + col + row
+            }
 
-        return { col: colOptions.indexOf(col) + 1, row } as pos
+        return { col: colOptions.indexOf(col), row: 8 - row } as pos
     }
 
 
