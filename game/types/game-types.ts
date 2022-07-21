@@ -5,8 +5,7 @@
 
     export type simplePiece = "k" | "K" | "q" | "Q" | "r" | "R" | "b" | "B" | "n" | "N" | "p" | "P" | "#"
     export type simpleBoard = simplePiece[][]  
-    export type testCase = { name: string, comment?: string, subCases: subCase[], board: simpleBoard }
-    export type subCase = { expected: pos[], pieceToMove: string, name: string, comment?: string}
+    export type testCase = { name: string, comment?: string, board: simpleBoard, turn: team }
 
     export type field = {
         team: team
