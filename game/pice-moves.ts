@@ -54,7 +54,11 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
     }
 
     const king = (from: pos, to: pos, state: gameState) => {
-        return (to.col === from.col && isNotMyPiece(from, to, state) && isPieceBetweenCol(from, to, state)) || (to.row === from.row && isNotMyPiece(from, to, state) && isPieceBetweenRow(from, to, state))
+        return (to.col === from.col 
+            && isNotMyPiece(from, to, state) 
+            && isPieceBetweenCol(from, to, state)) 
+            || (to.row === from.row && isNotMyPiece(from, to, state) 
+            && isPieceBetweenRow(from, to, state))
     }
 
     // the way is not shadowed by an other piece

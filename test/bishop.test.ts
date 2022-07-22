@@ -1,0 +1,28 @@
+import { loadTestCase } from "./utils/fileLoader"
+import { chess } from "../game/game"
+import { gameState } from "../game/types/game-types";
+import { testUtil } from "./utils/testUtil";
+
+let state: gameState
+
+beforeEach(() => {
+  state = loadTestCase(5)!
+  expect(state).not.toBeNull()
+});
+
+it('bishop can move on digonals', () => {
+  const D3 = testUtil.posArrayToNotationArray(chess.allValidMoves("D3", state))   
+  expect(D3).toStrictEqual(["B1", "C2", "E2", "F1", "C4", "B5", "A6", "E4", "F5", "G6", "H7"].sort())
+})
+
+it('bishop can´t jump over other pices', () => {
+  const G3 = testUtil.posArrayToNotationArray(chess.allValidMoves("G3", state))   
+  expect(G3).toStrictEqual(["E1", "F2", "H2", "H4"].sort())
+})
+
+it('bishop can´t jump over other pices', () => {
+  const D6 = testUtil.posArrayToNotationArray(chess.allValidMoves("D6", state))   
+  expect(D6).toStrictEqual(["E5", "C5", "B4", "A3", "E7", "F8", "C7", "B8"].sort())
+})
+
+export {}
