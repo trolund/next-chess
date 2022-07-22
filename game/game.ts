@@ -184,14 +184,13 @@ export module chess {
     export const toPos = (notation: string): pos => {
         const colOptions = ["A", "B", "C", "D", "E", "F", "G", "H"]
         const row: number = Number.parseInt(notation[1])
-        const col: string = notation[0]
+        const col: string = notation[0]        
 
         if(notation.length !== 2 
-            // || row === NaN 
-            // || typeof col !== 'string'
-            // || !colOptions.includes(String(col)) 
-            // || (row > 0 && row < 9) 
-            // || colOptions.indexOf(col) === -1 
+            || row === NaN 
+            || typeof col !== 'string'
+            || !colOptions.includes(String(col)) 
+            || colOptions.indexOf(col) === -1 
             || (8 - row) < 0) {
                 throw "Input not correct notation : " + col + row
             }

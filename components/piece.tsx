@@ -55,7 +55,7 @@ const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onCl
             }}>
             {leftLabel && theLabel(leftLabel, "LEFT")}
             {bottomLabel && theLabel(bottomLabel, "BOTTOM")}
-            {debug && <div style={{ position: "absolute" }}>{debugUseNotation ? chess.notation({row, col}) : `${row}, ${col}`}</div>}
+            {debug && <div style={{ position: "absolute" }}>{debugUseNotation ? <span style={{fontSize: "0.6rem"}}>{chess.notation({row, col})}<p style={{fontSize: "0.5rem", lineHeight: "normal", marginTop: "-1.1rem"}}>{`${row}, ${col}`}</p></span> : `${row}, ${col}`}</div>}
             {<Image height="60%" width="60%" src={`/img/${field.team}-${field.piece}.svg`} />}
 
         </div>

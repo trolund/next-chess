@@ -6,26 +6,18 @@ import { DataStore } from '../stores/dataStore'
 import { useState } from 'react'
 import Image from 'next/image'
 import { testUtil } from '../test/utils/testUtil'
-import { loadTestCase } from '../test/utils/fileLoader'
 import { field, gameState, pos, simpleBoard } from '../game/types/game-types'
+import TestLoader from '../components/testLoader'
+import { emptyBoard } from '../stores/emptyBoard'
 
 interface HomeProps {
   dataStore?: DataStore;
 };
 
 function Home(props: HomeProps): JSX.Element {
-
-  const testCase: simpleBoard = [["#", "#", "p", "#", "#", "p", "p", "#"],
-                                 ["B", "#", "#", "#", "#", "#", "#", "#"],
-                                 ["#", "#", "#", "#", "B", "#", "B", "#"],
-                                 ["#", "B", "#", "#", "b", "#", "#", "#"],
-                                 ["#", "#", "b", "b", "#", "#", "B", "K"],
-                                 ["#", "k", "#", "#", "#", "#", "#", "#"],
-                                 ["#", "#", "#", "k", "p", "#", "#", "#"],
-                                 ["#", "B", "P", "P", "#", "#", "#", "#"]]
-
+  
   //const startState = createGame()
-  const startState = testUtil.createTestGame(testCase)
+  const startState = testUtil.createTestGame(emptyBoard)
 
   const [gameState, setGameState] = useState<gameState>(startState);
   const [selectedField, setSelectedField] = useState<field | null>(null);
@@ -76,6 +68,7 @@ function Home(props: HomeProps): JSX.Element {
       </Head>
 
       <main className={styles.main}>
+        <TestLoader setGameState={setGameState} />
         <div className={styles.grid}>
           <div>
             {gameState.piecesTaken.filter(f => f.team === 'black').map(field => <div><Image height="30%" width="30%" src={`/img/${field.team}-${field.piece}.svg`} /></div>)}
