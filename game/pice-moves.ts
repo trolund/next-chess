@@ -41,7 +41,6 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
         return false
     }
 
-
     const knight = (from: pos, to: pos, state: gameState): boolean => {
         return (from.col + 2 == to.col && from.row + 1 == to.row
             || from.col - 2 == to.col && from.row - 1 == to.row
@@ -58,8 +57,7 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
         return (to.col === from.col && isNotMyPiece(from, to, state) && isPieceBetweenCol(from, to, state)) || (to.row === from.row && isNotMyPiece(from, to, state) && isPieceBetweenRow(from, to, state))
     }
 
-
-        // the way is not shadowed by an other piece
+    // the way is not shadowed by an other piece
     // return true if is shadow
     const firstInCol = (col: field[]): number => {
         let index = -1

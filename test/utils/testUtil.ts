@@ -97,11 +97,11 @@ export module testUtil {
     }
 
     export const posArrayToNotationArray = (a: pos[]): string[] => {
-        return a.map(p => chess.notation(p))
+        return a.map(p => chess.notation(p)).sort()
     }
 
     export const notationArrayToPosArray = (a: string[]): pos[] => {
-        return a.map(n => chess.toPos(n))
+        return a.map(n => chess.toPos(n)).sort()
     }
 
     export const changeTurn = (state: gameState): gameState => {

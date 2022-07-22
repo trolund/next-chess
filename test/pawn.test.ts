@@ -49,4 +49,5 @@ it('pwan move rules, pwan atack - case 1', () => {
   expect(F2).toStrictEqual([chess.toPos("F4"), chess.toPos("F3"), chess.toPos("G3")].sort())
 })
 
+
 export {}

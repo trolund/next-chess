@@ -1,6 +1,6 @@
 {
     "name": "case 1",
-    "comment": "comment",
+    "comment": "test primary for pawns",
     "turn": "white", 
     "board":[["#", "#", "#", "#", "#", "#", "#", "#"],
              ["#", "P", "P", "P", "#", "#", "P", "#"],
