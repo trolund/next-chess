@@ -9,14 +9,16 @@ import { board, diagonal, field, gameState, pos, team } from "./types/game-types
                 && to.row - from.row === direction // in the direction of the opponent
                 && notOccupied) // empty in front of piece
                 || pawnAttack(from, to, state) // can attack
-                || startPawn(from, to, state.turn, notOccupied) // from starting position the pawn can move to steps forward
+                || startPawn(from, to, state, notOccupied) // from starting position the pawn can move to steps forward
     }
 
-    const startPawn = (from: pos, to: pos, team: team, notOccupied: boolean): boolean => {
-        if(team === "white" && from.row === 6){
-            return to.col === from.col && to.row === 4 && notOccupied
-        }else if (team === "black" && from.row === 1) {
-            return to.col === from.col && to.row === 3 && notOccupied
+    const startPawn = (from: pos, to: pos, state: gameState, notOccupied: boolean): boolean => {
+        if(state.turn === "white" && from.row === 6){
+            const whiteInFront = chess.getFieldAtPos({row: from.row -1, col: from.col}, state).team === null
+            return to.col === from.col && to.row === 4 && notOccupied && whiteInFront
+        }else if (state.turn === "black" && from.row === 1) {
+            const blackInFront = chess.getFieldAtPos({row: from.row +1, col: from.col}, state).team === null
+            return to.col === from.col && to.row === 3 && notOccupied && blackInFront
         }
         return false
     }
