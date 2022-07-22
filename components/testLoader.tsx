@@ -11,11 +11,6 @@ const TestLoader: FunctionComponent<TestLoader> = ({ setGameState }) => {
 
     const [cases, setCases] = useState<string[]>([]);
 
-    const getCaseNumber = (fileName: string):number => {
-        const parts = fileName.split("-")
-        return Number(parts[1])
-    }
-
     useEffect(() => {
         fetch('/api/test-cases')
         .then(data => data.json())

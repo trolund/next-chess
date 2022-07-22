@@ -15,7 +15,9 @@ interface HomeProps {
 };
 
 function Home(props: HomeProps): JSX.Element {
-  
+
+  const testing = true
+
   //const startState = createGame()
   const startState = testUtil.createTestGame(emptyBoard)
 
@@ -68,14 +70,14 @@ function Home(props: HomeProps): JSX.Element {
       </Head>
 
       <main className={styles.main}>
-        <TestLoader setGameState={setGameState} />
+        {testing && <TestLoader setGameState={setGameState} />}
         <div className={styles.grid}>
           <div>
             {gameState.piecesTaken.filter(f => f.team === 'black').map(field => <div><Image height="30%" width="30%" src={`/img/${field.team}-${field.piece}.svg`} /></div>)}
           </div>
           <Board
-            debug
-            debugUseNotation
+            debug={testing}
+            debugUseNotation={testing}
             selected={selectedField}
             board={gameState.board}
             turn={gameState.turn}
