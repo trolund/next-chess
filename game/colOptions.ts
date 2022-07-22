@@ -1,0 +1,1 @@
+export const colOptions = ["A", "B", "C", "D", "E", "F", "G", "H"]

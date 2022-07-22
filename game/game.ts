@@ -1,5 +1,6 @@
+import { colOptions } from "./colOptions"
 import { bishopCanMove, king, knight, pawn } from "./pice-moves"
-import { board, diagonal, field, gameState, piece, pos, team } from "./types/game-types"
+import { board, field, gameState, piece, pos, team } from "./types/game-types"
 
 export module chess {
 
@@ -172,17 +173,14 @@ export module chess {
     }
 
     export const notation = (pos: pos): string => {
-        const col = ["A", "B", "C", "D", "E", "F", "G", "H"]
-        return `${col[pos.col]}${8 - pos.row}`
+        return `${colOptions[pos.col]}${8 - pos.row}`
     }
 
     export const notationComponents = (pos: pos): { number: number, char: string } => {
-        const col = ["A", "B", "C", "D", "E", "F", "G", "H"]
-        return { number: 8 - pos.row, char: col[pos.col] }
+        return { number: 8 - pos.row, char: colOptions[pos.col] }
     }
 
     export const toPos = (notation: string): pos => {
-        const colOptions = ["A", "B", "C", "D", "E", "F", "G", "H"]
         const row: number = Number.parseInt(notation[1])
         const col: string = notation[0]        
 
