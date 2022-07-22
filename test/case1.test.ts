@@ -1,12 +1,19 @@
-import { loadTestCase } from "./utils/fileLoader";
-import { chess } from "../game/game";
+import { loadTestCase } from "./utils/fileLoader"
+import { chess } from "../game/game"
+import { gameState } from "../game/types/game-types";
+
+let state: gameState
+
+beforeEach(() => {
+  state = loadTestCase(1)!
+  expect(state).not.toBeNull()
+});
+
+// afterEach(() => {
+
+// });
 
 it('case 1', () => {
-  const state = loadTestCase(1)  
-
-  expect(state).not.toBeNull()
-
-  if(state){
     const movesWhite = chess.allValidMoves("F2", state) // trying to move white pice
     expect(movesWhite).toStrictEqual([chess.toPos("F3")])
   
@@ -14,7 +21,6 @@ it('case 1', () => {
   
     const movesBlack = chess.allValidMoves("C7", {...state, turn: "black"})
     console.log(movesBlack);
-  }
-});
+})
 
 export {}
