@@ -1,9 +1,7 @@
 {
-    "name": "case 1",
-    "comment": "comment",
-    "subCases": [{
-        "expected": [], "pieceToMove": "", "name": "subcase test", "comment": "comment"
-    }], 
+    "name": "template",
+    "comment": "template comment",
+    "turn": "white", 
     "board":[["#", "#", "#", "#", "#", "#", "#", "#"],
              ["#", "#", "#", "#", "#", "#", "#", "#"],
              ["#", "#", "#", "#", "#", "#", "#", "#"],
