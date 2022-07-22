@@ -104,4 +104,9 @@ export module testUtil {
         return a.map(n => chess.toPos(n))
     }
 
+    export const changeTurn = (state: gameState): gameState => {
+        state.turn = state.turn === "white" ? "black" : "white"
+        return state
+    }
+
 }

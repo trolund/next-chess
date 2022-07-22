@@ -1,5 +1,5 @@
 import { chess } from "./game";
-import { board, diagonal, field, gameState, pos, team } from "./types/game-types";
+import { board, diagonal, field, gameState, pos } from "./types/game-types";
 
     const pawn = (from: pos, to: pos, state: gameState): boolean => {
         const direction = state.turn === "black" ? 1 : -1
@@ -8,16 +8,34 @@ import { board, diagonal, field, gameState, pos, team } from "./types/game-types
         return  (to.col === from.col 
                 && to.row - from.row === direction // in the direction of the opponent
                 && notOccupied) // empty in front of piece
-                || pawnAttack(from, to, state) // can attack
+                || pawnAttack(from, to, state) // pwan can attack
                 || startPawn(from, to, state, notOccupied) // from starting position the pawn can move to steps forward
+    }
+
+    const pawnAttack = (from: pos, to: pos, state: gameState): boolean => {
+        const direction = state.turn === "black" ? -1 : 1
+
+        const right = (to.col - 1) === from.col && from.row === (to.row + direction)
+        const left = (to.col + 1) === from.col && from.row === (to.row + direction)        
+
+        const field = chess.getFieldAtPos(to, state)
+
+        if (right || left) {
+
+            console.log(chess.notation(to));
+            
+            return field?.team !== state.turn && field.piece !== null
+        } 
+
+        return false
     }
 
     const startPawn = (from: pos, to: pos, state: gameState, notOccupied: boolean): boolean => {
         if(state.turn === "white" && from.row === 6){
-            const whiteInFront = chess.getFieldAtPos({row: from.row -1, col: from.col}, state).team === null
+            const whiteInFront = chess.getFieldAtPos({row: from.row -1, col: from.col}, state).team === null // can not jump over other piece
             return to.col === from.col && to.row === 4 && notOccupied && whiteInFront
         }else if (state.turn === "black" && from.row === 1) {
-            const blackInFront = chess.getFieldAtPos({row: from.row +1, col: from.col}, state).team === null
+            const blackInFront = chess.getFieldAtPos({row: from.row +1, col: from.col}, state).team === null // can not jump over other piece
             return to.col === from.col && to.row === 3 && notOccupied && blackInFront
         }
         return false
@@ -113,23 +131,6 @@ import { board, diagonal, field, gameState, pos, team } from "./types/game-types
         const fromField = state.board[from.row][from.col]
         const toField = state.board[to.row][to.col]
         return fromField.team !== toField.team
-    }
-
-    const pawnAttack = (from: pos, to: pos, state: gameState): boolean => {
-        const direction = state.turn === "white" ? -1 : 1
-
-        const right = (to.col - 1) === from.col && from.row === (to.row + direction)
-        const left = (to.col + 1) === from.col && from.row === (to.row + direction)
-
-        const field = state.board[to.row][to.col]
-
-        if (right) {
-            return field?.team !== state.turn && field.piece !== null
-        } else if (left) {
-            return field?.team !== state.turn && field.piece !== null
-        } 
-
-        return false
     }
 
     const bishop = (from: pos, to: pos, state: gameState) => {
