@@ -70,6 +70,7 @@ function Home(props: HomeProps): JSX.Element {
       </Head>
 
       <main className={styles.main}>
+        <div style={{position: "fixed", left: "1rem", top: "1rem"}}>Turn : {gameState.turn}</div>
         {testing && <TestLoader setGameState={setGameState} />}
         <div className={styles.grid}>
           <div>

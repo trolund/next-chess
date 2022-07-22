@@ -40,7 +40,7 @@ const TestLoader: FunctionComponent<TestLoader> = ({ setGameState }) => {
 
     return (
         <div style={{position: "fixed", right: "1rem", top: "1rem", background: "#FFFFFF00"}}>
-            <button onClick={reset}>Reset</button>
+            <button style={{marginRight: "1rem"}} onClick={reset}>Reset</button>
             <select name="cases" id="cases" onChange={caseSelect}>
                 {cases.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
