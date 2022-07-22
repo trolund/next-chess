@@ -7,12 +7,12 @@ it('case 1', () => {
   expect(state).not.toBeNull()
 
   if(state){
-    const movesWhite = chess.allValidMoves("F1", state) // trying to move white pice
-    expect(movesWhite).toStrictEqual([chess.toPos("F2")])
+    const movesWhite = chess.allValidMoves("F2", state) // trying to move white pice
+    expect(movesWhite).toStrictEqual([chess.toPos("F3")])
   
-    expect(chess.allValidMoves("C8", state)).toHaveLength(0) // trying to move black. can't move black when it is whites turn
+    expect(chess.allValidMoves("C7", state)).toHaveLength(0) // trying to move black. can't move black when it is whites turn
   
-    const movesBlack = chess.allValidMoves("C8", {...state, turn: "black"})
+    const movesBlack = chess.allValidMoves("C7", {...state, turn: "black"})
     console.log(movesBlack);
   }
 });
