@@ -56,8 +56,8 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
     const king = (from: pos, to: pos, state: gameState) => {
         return (to.col === from.col 
             && isNotMyPiece(from, to, state) 
-            && isPieceBetweenCol(from, to, state)) 
-            || (to.row === from.row && isNotMyPiece(from, to, state) 
+            && isPieceBetweenCol(from, to, state)) || (to.row === from.row 
+            && isNotMyPiece(from, to, state) 
             && isPieceBetweenRow(from, to, state))
     }
 
@@ -136,66 +136,65 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
     }
 
     const bishop = (from: pos, to: pos, state: gameState) => {
-        return isPieceBetweenDiagonal(from, to, state)
-            && ((from.col - to.col) + (from.row - to.row)) % 2 === 0
-            && state.board[to.row][to.col].team !== state.turn
-            && ((to.col - from.col) === (from.row - to.row) || (from.col - to.col) === (from.row - to.row))
-            && state.board[to.row][to.col].team !== state.turn
-
+        return bishopCanMove(from, to, state)
     }
 
     const bishopCanMove = (from: pos, to: pos, state: gameState) => {        
 
+        if(from.col === to.col && from.row === to.row) return false // The piece there should be moved
+
         const pathLength = Math.abs(to.col - from.col); 
         if (pathLength != Math.abs(to.row - from.row)) return false // Not diagonal
-        // Also validate if the coordinates are in the 0-7 range
-
+       
         if(to.row > from.row && to.col > from.col){ // bottom right
-            for (let i = 1; i < pathLength+1; i++) {
+            for (let i = 1; i < pathLength; i++) {
                 
                 let row = from.row + i
                 let col = from.col + i
     
-                if(!chess.getFieldAtPos({row, col}, state).piece) continue
-                return false // true if player can capture
+                if(IsEmpty({col, row}, state)) continue; // No obstacles here: keep going
+                else return false; // Obstacle found before reaching target: the move is invalid
             }
         } else if(to.row < from.row && to.col > from.col){ // top right
-            for (let i = 1; i < pathLength+1; i++) {
+            for (let i = 1; i < pathLength; i++) {
                 
                 let row = from.row - i
                 let col = from.col + i
 
-    
-                if(!chess.getFieldAtPos({row, col}, state).piece) continue
-                return false
+                if(IsEmpty({col, row}, state)) continue; // No obstacles here: keep going
+                else return false; // Obstacle found before reaching target: the move is invalid
             }
         } else if(to.row < from.row && to.col < from.col){ // top left
-            for (let i = 1; i < pathLength+1; i++) {
+            for (let i = 1; i < pathLength; i++) {
                 
                 let row = from.row - i
                 let col = from.col - i
     
-                if(!chess.getFieldAtPos({row, col}, state).piece) continue
-                return false
+                if(IsEmpty({col, row}, state)) continue; // No obstacles here: keep going
+                else return false; // Obstacle found before reaching target: the move is invalid
             }
         } else if(to.row > from.row && to.col < from.col){ // bottom left
-            for (let i = 1; i < pathLength+1; i++) {
+            for (let i = 1; i < pathLength; i++) {
                 
                 let row = from.row + i
                 let col = from.col - i
     
-                if(!chess.getFieldAtPos({row, col}, state).piece) continue
-                return false
+                if(IsEmpty({col, row}, state)) continue; // No obstacles here: keep going
+                else return false; // Obstacle found before reaching target: the move is invalid
             }
-        }else {
-            return false
         }
+
+        
+        
 
         // Check target cell
         if (IsEmpty({col: to.col, row: to.row}, state)) return true; // No piece: move is valid
 
         // There's a piece here: the move is valid only if we can capture
-        return canCapture(from, to, state)
+        console.log("hej!!!!", chess.notation(to));
+        const fromField = chess.getFieldAtPos(from, state)
+        const toField = chess.getFieldAtPos(to, state)
+        return toField.team !== fromField.team
     }
 
     const canCapture = (from: pos, to: pos, state: gameState) => chess.getFieldAtPos(to, state).piece !== chess.getFieldAtPos(from, state).piece // true if player can capture
