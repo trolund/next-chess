@@ -147,7 +147,7 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
     const bishopCanMove = (from: pos, to: pos, state: gameState) => {        
 
         const pathLength = Math.abs(to.col - from.col); 
-        if (pathLength != Math.abs(to.row - from.row)) return false; // Not diagonal
+        if (pathLength != Math.abs(to.row - from.row)) return false // Not diagonal
         // Also validate if the coordinates are in the 0-7 range
 
         if(to.row > from.row && to.col > from.col){ // bottom right
@@ -157,13 +157,14 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
                 let col = from.col + i
     
                 if(!chess.getFieldAtPos({row, col}, state).piece) continue
-                return false
+                return false // true if player can capture
             }
         } else if(to.row < from.row && to.col > from.col){ // top right
             for (let i = 1; i < pathLength+1; i++) {
                 
                 let row = from.row - i
                 let col = from.col + i
+
     
                 if(!chess.getFieldAtPos({row, col}, state).piece) continue
                 return false
@@ -186,14 +187,18 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
                 if(!chess.getFieldAtPos({row, col}, state).piece) continue
                 return false
             }
+        }else {
+            return false
         }
 
         // Check target cell
         if (IsEmpty({col: to.col, row: to.row}, state)) return true; // No piece: move is valid
 
         // There's a piece here: the move is valid only if we can capture
-        return GetPieceTeam({col: to.col, row: to.row}, state) === GetPieceTeam({col: from.col, row: from.row}, state);
+        return canCapture(from, to, state)
     }
+
+    const canCapture = (from: pos, to: pos, state: gameState) => chess.getFieldAtPos(to, state).piece !== chess.getFieldAtPos(from, state).piece // true if player can capture
 
     const isPieceBetweenDiagonal = (from: pos, to: pos, state: gameState) => {
         const [lowToHigh, highToLow] = diagonals(state.board, from)
