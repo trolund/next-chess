@@ -158,7 +158,7 @@ export module chess {
         if (pieceType === "pawn") {
             return pawn(from, to, state)
         } else if (pieceType === "bishop") {            
-            return bishop(from, to, state) 
+            return bishopCanMove(from, to, state) 
         } else if (pieceType == "knight") {
             return knight(from, to, state)
         } else if (pieceType == "king") {

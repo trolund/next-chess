@@ -144,23 +144,48 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
 
     }
 
-    const bishopCanMove = (from: pos, to: pos, state: gameState) => {
+    const bishopCanMove = (from: pos, to: pos, state: gameState) => {        
 
-        console.log("bishop");
-        
-
-        let pathLength = Math.abs(to.col - from.col); 
+        const pathLength = Math.abs(to.col - from.col); 
         if (pathLength != Math.abs(to.row - from.row)) return false; // Not diagonal
         // Also validate if the coordinates are in the 0-7 range
 
-        // Check all cells before the target
-        for (let i: number = 1; i < pathLength; i++)
-        {
-            let x = from.col + i;
-            let y = from.row + i;
-
-            if(IsEmpty({col: x, row: y}, state)) continue; // No obstacles here: keep going
-            else return false; // Obstacle found before reaching target: the move is invalid
+        if(to.row > from.row && to.col > from.col){ // bottom right
+            for (let i = 1; i < pathLength+1; i++) {
+                
+                let row = from.row + i
+                let col = from.col + i
+    
+                if(!chess.getFieldAtPos({row, col}, state).piece) continue
+                return false
+            }
+        } else if(to.row < from.row && to.col > from.col){ // top right
+            for (let i = 1; i < pathLength+1; i++) {
+                
+                let row = from.row - i
+                let col = from.col + i
+    
+                if(!chess.getFieldAtPos({row, col}, state).piece) continue
+                return false
+            }
+        } else if(to.row < from.row && to.col < from.col){ // top left
+            for (let i = 1; i < pathLength+1; i++) {
+                
+                let row = from.row - i
+                let col = from.col - i
+    
+                if(!chess.getFieldAtPos({row, col}, state).piece) continue
+                return false
+            }
+        } else if(to.row > from.row && to.col < from.col){ // bottom left
+            for (let i = 1; i < pathLength+1; i++) {
+                
+                let row = from.row + i
+                let col = from.col - i
+    
+                if(!chess.getFieldAtPos({row, col}, state).piece) continue
+                return false
+            }
         }
 
         // Check target cell
