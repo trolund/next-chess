@@ -1,6 +1,7 @@
 import { observable } from "mobx";
 import { enableStaticRendering } from "mobx-react";
 import { chess } from "../game/game";
+import { gameState, pos } from "../game/types/game-types";
 
 const isServer = typeof window === "undefined";
 // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -13,9 +14,9 @@ type SerializedStore = {
 
 export class DataStore {
   @observable title: string | undefined;
-  @observable gameState: chess.gameState | undefined;
-  @observable highlight: Set<chess.pos> | undefined;
-  @observable pos: chess.pos | undefined;
+  @observable gameState: gameState | undefined;
+  @observable highlight: Set<pos> | undefined;
+  @observable pos: pos | undefined;
 
   hydrate(serializedStore: SerializedStore) {
     this.title = serializedStore.title != null ? serializedStore.title : "";
@@ -23,15 +24,15 @@ export class DataStore {
     this.highlight = undefined;
   }
 
-  setHighlights(pos: Set<chess.pos>) {
+  setHighlights(pos: Set<pos>) {
     this.highlight = pos;
   }
 
-  setPos(pos: chess.pos) {
+  setPos(pos: pos) {
     this.pos = pos;
   }
 
-  setState(newState: chess.gameState) {
+  setState(newState: gameState) {
     this.gameState = newState;
   }
 
