@@ -28,4 +28,24 @@ it('bishop can´t jump over other pices', () => {
   expect(D6).toStrictEqual(["E5", "C5", "B4", "A3", "E7", "F8", "C7", "B8"].sort())
 })
 
+it('bishop can attack', () => {
+  const B3 = testUtil.posArrayToNotationArray(chess.allValidMoves("B3", state2))   
+  expect(B3).toStrictEqual(["A2", "A4", "C2", "D1", "C4", "D5", "E6"].sort())
+})
+
+it('bishop can attack 2', () => {
+  const D3 = testUtil.posArrayToNotationArray(chess.allValidMoves("D3", state2))   
+  expect(D3).toStrictEqual(["B1", "C2", "F1", "E2", "C4", "B5", "E4", "F5"].sort())
+})
+
+it('bishop can attack 3', () => {
+  const G3 = testUtil.posArrayToNotationArray(chess.allValidMoves("G3", state2))   
+  expect(G3).toStrictEqual(["H4", "E1", "F2", "H2"].sort())
+})
+
+it('bishop can attack 4', () => {
+  const D6 = testUtil.posArrayToNotationArray(chess.allValidMoves("D6", state))   
+  expect(D6).toStrictEqual(["E5", "C5", "B4", "C7", "B8", "E7", "F8", "A3"].sort())
+})
+
 export {}

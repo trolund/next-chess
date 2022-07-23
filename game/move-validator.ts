@@ -21,9 +21,6 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
         const field = chess.getFieldAtPos(to, state)
 
         if (right || left) {
-
-            console.log(chess.notation(to));
-            
             return field?.team !== state.turn && field.piece !== null
         } 
 

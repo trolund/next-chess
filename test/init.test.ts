@@ -2,7 +2,7 @@ import { loadTestCase } from "./utils/fileLoader"
 import { chess } from "../game/game"
 import { gameState } from "../game/types/game-types";
 import { testUtil } from "./utils/testUtil";
-import { colOptions } from "../game/colOptions";
+import { colOptions } from "../game/col-options";
 
 let state: gameState
 

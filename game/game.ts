@@ -1,5 +1,5 @@
-import { colOptions } from "./colOptions"
-import { bishop, king, knight, pawn } from "./pice-moves"
+import { colOptions } from "./col-options"
+import { bishop, king, knight, pawn } from "./move-validator"
 import { board, field, gameState, piece, pos, team } from "./types/game-types"
 
 export module chess {
