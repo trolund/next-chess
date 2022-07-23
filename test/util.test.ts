@@ -96,5 +96,21 @@ it('too small', () => {
   expect(testUtil.validateSizeOfSimpleBoard(wrongBoard)).toBe(false)
 })
 
+it('createTestGame with wrong board', () => {
+  try{
+    const wrongBoard: simpleBoard = [ ["#", "#", "#", "#", "#", "#", "#"],
+    ["#", "#", "#", "#", "#", "#", "#"],
+    ["#", "#", "#", "#", "#", "#", "#"],
+    ["#", "#", "#", "#", "#", "#", "#"],
+    ["#", "#", "#", "#", "#", "#", "#"],
+    ["#", "#", "#", "#", "#", "#", "#"],
+    ["#", "#", "#", "#", "#", "#", "#"],
+    ["#", "#", "#", "#", "#", "#", "#"]]
+    expect(testUtil.createTestGame(wrongBoard)).toThrow()
+  } catch(_){}
+})
+
+
+
 export {}
 

@@ -1,5 +1,5 @@
 import { colOptions } from "./col-options"
-import { bishop, king, knight, pawn } from "./move-validator"
+import { bishop, king, knight, pawn, queen, rook } from "./move-validator"
 import { board, field, gameState, piece, pos, team } from "./types/game-types"
 
 export module chess {
@@ -164,9 +164,9 @@ export module chess {
         } else if (pieceType == "king") {
             return king(from, to, state)
         } else if (pieceType == "rook") {
-            return king(from, to, state)
+            return rook(from, to, state)
         } else if (pieceType == "queen") {
-            return king(from, to, state)
+            return queen(from, to, state)
         } else {
             return false;
         }

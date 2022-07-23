@@ -1,3 +1,4 @@
+import { format } from "path";
 import { chess } from "./game";
 import { board, diagonal, field, gameState, pos } from "./types/game-types";
 
@@ -51,11 +52,34 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
     }
 
     const king = (from: pos, to: pos, state: gameState) => {
+        const colLength = Math.abs(to.col - from.col)
+        const rowLength = Math.abs(to.row - from.row)
+
+        if(colLength > 1 || rowLength > 1) return false
+
+        return ((to.col === from.col 
+            && isNotMyPiece(from, to, state) 
+            && isPieceBetweenCol(from, to, state)) || (to.row === from.row 
+            && isNotMyPiece(from, to, state) 
+            && isPieceBetweenRow(from, to, state))
+            || bishop(from, to, state))
+    }
+
+    const rook = (from: pos, to: pos, state: gameState) => {
         return (to.col === from.col 
             && isNotMyPiece(from, to, state) 
             && isPieceBetweenCol(from, to, state)) || (to.row === from.row 
             && isNotMyPiece(from, to, state) 
             && isPieceBetweenRow(from, to, state))
+    }
+
+    const queen = (from: pos, to: pos, state: gameState) => {
+        return ((to.col === from.col 
+            && isNotMyPiece(from, to, state) 
+            && isPieceBetweenCol(from, to, state)) || (to.row === from.row 
+            && isNotMyPiece(from, to, state) 
+            && isPieceBetweenRow(from, to, state))
+            || bishop(from, to, state))
     }
 
     // the way is not shadowed by an other piece
@@ -322,4 +346,4 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
 
 
 
-export {pawn, king, knight, bishop}
+export {pawn, king, knight, bishop, queen, rook}

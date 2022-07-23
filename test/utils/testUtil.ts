@@ -79,7 +79,7 @@ export module testUtil {
     export const createTestGame = (sb: simpleBoard, turn: team = "white", piecesTaken: field[] = []): gameState => {
 
         if (!sb || !validateSizeOfSimpleBoard(sb)) {
-            throw new Error("test board is not the correct size!")
+            throw "test board is not the correct size!"
         }
 
         return { board: createNewBoardFromSimpleBoard(sb), piecesTaken, turn }
