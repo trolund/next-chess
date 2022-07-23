@@ -196,6 +196,10 @@ export module chess {
         return `${colOptions[pos.col]}${8 - pos.row}`
     }
 
+    export const actionsCleanUp = (actions: action[]): action[] => {
+        return actions.map(a => ({from: typeof a.from !== "string" ? notation(a.from) : a.from, to: typeof a.to !== "string" ? notation(a.to) : a.to } as action))
+    }
+
     export const notationComponents = (pos: pos): { number: number, char: string } => {
         return { number: 8 - pos.row, char: colOptions[pos.col] }
     }
@@ -217,8 +221,18 @@ export module chess {
     }
 
     // https://simple.wikipedia.org/wiki/Check_and_checkmate
-    function checkmate(): boolean {
-        return false
+    export function checkmate(state: gameState): boolean {
+        const board: board = state.board
+        const team: team = state.turn === "white" ? "black" : "white"
+        const king: field = board.filter(row => row.filter(f => f.piece === "king" && f.team === team)).flat()[0]
+
+        const kingsMoves = actionsCleanUp(validMovesFrom(king.pos, {...state, turn: king.team}).map(to => ({from: king.pos, to } as action)))
+        const validMoves = actionsCleanUp(allValidMoves({...state, turn: team}))
+
+        console.log("kings moves: ", kingsMoves);
+        console.log("valid moves: ", validMoves);
+
+        return kingsMoves.some(km => validMoves.includes(km))
     }
 
 }

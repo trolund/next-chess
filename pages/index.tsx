@@ -71,7 +71,7 @@ function Home(props: HomeProps): JSX.Element {
 
       <main className={styles.main}>
         <div style={{position: "fixed", left: "1rem", top: "1rem"}}>Turn : {gameState.turn}</div>
-        {testing && <TestLoader setGameState={setGameState} />}
+        {testing && <TestLoader setGameState={setState} />}
         <div className={styles.grid}>
           {/* <div>
             {gameState.piecesTaken.filter(f => f.team === 'black').map((field, i) => <div key={i}><Image  height="30%" width="30%" src={`/img/${field.team}-${field.piece}.svg`} /></div>)}

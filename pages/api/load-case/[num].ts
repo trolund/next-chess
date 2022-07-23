@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { gameState } from "../../../game/types/game-types";
+import { gameState, testCase } from "../../../game/types/game-types";
 
 import { loadTestCase, loadTestCaseWithName } from "../../../test/utils/fileLoader"
 
@@ -16,7 +16,7 @@ export default (req: NextApiRequest, res: NextApiResponse<gameState>) => {
         }else{
           data = loadTestCaseWithName(`${num}.json`)
         }
-      }
+      }      
 
       if(!data){
         res.status(404)

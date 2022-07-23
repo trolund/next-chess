@@ -2,7 +2,7 @@ import { Dispatch, FunctionComponent, SetStateAction, useEffect, useState } from
 import { gameState } from "../game/types/game-types"
 
 interface TestLoader {
-    setGameState: Dispatch<SetStateAction<gameState>>
+    setGameState: (s: gameState) => void
 }
 
 const TestLoader: FunctionComponent<TestLoader> = ({ setGameState }) => {
@@ -17,7 +17,7 @@ const TestLoader: FunctionComponent<TestLoader> = ({ setGameState }) => {
     }, [])
 
     const caseSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        console.log(event.target.value);   
+        console.log("chosen case:", event.target.value);   
         fetch(`/api/load-case/${event.target.value}`)
         .then(data => data.json())
         .then(json => {
