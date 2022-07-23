@@ -1,5 +1,5 @@
 import { chess } from '../../game/game'
-import { board, field, gameState, piece, simpleBoard, simplePiece, team, pos } from '../../game/types/game-types'
+import { board, field, gameState, piece, simpleBoard, simplePiece, team, pos, chessPosList } from '../../game/types/game-types'
 
 export module testUtil {
 
@@ -94,8 +94,8 @@ export module testUtil {
         }
     }
 
-    export const posArrayToNotationArray = (a: pos[]): string[] => {
-        return a.map(p => chess.notation(p)).sort()
+    export const posArrayToNotationArray = (a: pos[]): chessPosList => {
+        return a.map(p => chess.notation(p)).sort() as chessPosList
     }
 
     export const notationArrayToPosArray = (a: string[]): pos[] => {

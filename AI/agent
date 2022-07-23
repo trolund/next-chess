@@ -33,4 +33,34 @@ export module agent {
         }
     }
 
+    // function max_value(state: gameState, depth=3) {
+    //     if (terminal_test(state) || depth == 0) {
+    //         return self.eval_max_dif(state)
+    //     }
+    //     let v = -Infinity
+    //     for action in self.actions(state):
+    //         newState = self.result(state, action)
+    //         if newState.human_turn:  # spiller 1
+    //             v = max(v, self.min_value(newState, depth - 1))
+    //         else:
+    //             v = max(v, self.max_value(newState, depth - 1))
+    //     return v
+    // }
+
+    // function min_value(self, state: State, depth=3):
+    // if self.terminal_test(state) or depth == 0:
+    //     return self.eval_max_dif(state)
+    // let v = Infinity
+    // for action in self.actions(state):
+    //     newState = self.result(state, action)
+    //     if state.human_turn:
+    //         v = min(v, self.max_value(newState, depth - 1))
+    //     else:
+    //         v = min(v, self.min_value(newState, depth - 1))
+    // return v
+
+}
+
+function terminal_test(state: gameState): boolean {
+    return false
 }

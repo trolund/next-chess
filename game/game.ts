@@ -1,6 +1,6 @@
 import { colOptions } from "./col-options"
 import { bishop, king, knight, pawn, queen, rook } from "./move-validator"
-import { board, field, gameState, piece, pos, team } from "./types/game-types"
+import { action, board, field, gameState, piece, pos, team } from "./types/game-types"
 
 export module chess {
 
@@ -106,7 +106,28 @@ export module chess {
         return prevState;
     }
 
-    export const allValidMoves = (fromPos: pos | string, state: gameState): pos[] => {
+    export const allValidMoves = (state: gameState): action[] => {
+        const turn = state.turn
+        const board = state.board
+        const validMoves: action[] = []
+
+        for (let i = 0; i < board.length; i++) {
+            for (let j = 0; j < board[i].length; j++) {
+                const field = board[i][j]
+                if(field.team === turn){
+                    const movesFromField = validMovesFrom(field.pos, state)
+                    movesFromField.forEach(m => {
+                        validMoves.push({ from: field.pos, to: m })
+                    })
+                }
+            }
+        }
+
+        return validMoves
+
+    }
+
+    export const validMovesFrom = (fromPos: pos | string, state: gameState): pos[] => {
 
         let fromPosParsed: pos;
 
@@ -196,6 +217,9 @@ export module chess {
         return { col: colOptions.indexOf(col), row: 8 - row } as pos
     }
 
-
+    // https://simple.wikipedia.org/wiki/Check_and_checkmate
+    function checkmate(): boolean {
+        return false
+    }
 
 }

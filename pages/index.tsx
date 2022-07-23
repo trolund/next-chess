@@ -82,7 +82,7 @@ function Home(props: HomeProps): JSX.Element {
             selected={selectedField}
             board={gameState.board}
             turn={gameState.turn}
-            highlight={chess.allValidMoves(selectedField?.pos!, gameState)}
+            highlight={chess.validMovesFrom(selectedField?.pos!, gameState)}
             pieceOnClick={handleOnPieceClick}
           />
           {/* <div>
