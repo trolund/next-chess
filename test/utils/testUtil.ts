@@ -22,9 +22,7 @@ export module testUtil {
         }
 
         const getPiece = (input: simplePiece): piece => {
-            if (!input) {
-                return null
-            }
+           // if (!input) return null
 
             const sp = input.toUpperCase()
 
@@ -69,7 +67,7 @@ export module testUtil {
     }
 
     // false if SimpleBoard is NOT valid
-    const validateSizeOfSimpleBoard = (sb: simpleBoard): boolean => {
+    export const validateSizeOfSimpleBoard = (sb: simpleBoard): boolean => {
         const boardSize = 8;
         if (sb.length !== boardSize) {
             return false;
