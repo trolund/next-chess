@@ -76,6 +76,35 @@ export module testUtil {
         }
     }
 
+    const nameToSimpleName = (name: piece | null, team: team) => {
+
+        if(!name) return "#"
+
+        const map = (name: piece) => {
+            if (name === "king") {
+                return "k"
+            } else if (name === "bishop") {
+                return "b"
+            } else if (name === "knight") {
+                return "n"
+            } else if (name === "pawn") {
+                return "p"
+            } else if (name === "queen") {
+                return "q"
+            } else if (name === "rook") {
+                return "r"
+            } else {
+                return null
+            }
+        }
+
+        if(team === "white"){
+            return map(name)
+        }else {
+            return map(name)?.toUpperCase()
+        }
+    }
+
     export const createTestGame = (sb: simpleBoard, turn: team = "white", piecesTaken: field[] = []): gameState => {
 
         if (!sb || !validateSizeOfSimpleBoard(sb)) {
@@ -86,12 +115,15 @@ export module testUtil {
     }
 
     export const printBoard = (sb: board) => {
+        let s = ""
         for(let row = 0; row < 7; row++){
-            console.log("\n")
             for(let col = 0; col < 7; col++){
-                console.log(sb[row][col])
+                const f = sb[row][col]
+                s = s + ` ${nameToSimpleName(f.piece, f.team)} `
             }
+            s = s + "\n"
         }
+        console.log(s);
     }
 
     export const printActions = (actions: action[]) => {

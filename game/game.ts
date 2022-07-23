@@ -1,3 +1,4 @@
+import { testUtil } from "../test/utils/testUtil"
 import { colOptions } from "./col-options"
 import { bishop, king, knight, pawn, queen, rook } from "./move-validator"
 import { action, board, chessPos, field, gameState, piece, pos, team } from "./types/game-types"
@@ -220,15 +221,19 @@ export module chess {
         return { col: colOptions.indexOf(col), row: 8 - row } as pos
     }
 
+    const changeTeam = (turn: team): team => turn === "white" ? "black" : "white"
+
     // https://simple.wikipedia.org/wiki/Check_and_checkmate
     export function checkmate(state: gameState): boolean {
         const board: board = state.board
-        const team: team = state.turn === "white" ? "black" : "white"
+        const team: team = changeTeam(state.turn)
         const king: field = board.filter(row => row.filter(f => f.piece === "king" && f.team === team)).flat()[0]
-
+        testUtil.printBoard(board)
         const kingsMoves = actionsCleanUp(validMovesFrom(king.pos, {...state, turn: king.team}).map(to => ({from: king.pos, to } as action)))
         const validMoves = actionsCleanUp(allValidMoves({...state, turn: team}))
 
+        console.log("king: ", king);
+        
         console.log("kings moves: ", kingsMoves);
         console.log("valid moves: ", validMoves);
 
