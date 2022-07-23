@@ -4,10 +4,13 @@ import { gameState } from "../game/types/game-types";
 import { testUtil } from "./utils/testUtil";
 
 let state: gameState
+let state2: gameState
 
 beforeEach(() => {
   state = loadTestCase(5)!
+  state2 = loadTestCase(6)!
   expect(state).not.toBeNull()
+  expect(state2).not.toBeNull()
 });
 
 it('bishop can move on digonals', () => {

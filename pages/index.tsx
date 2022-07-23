@@ -73,9 +73,9 @@ function Home(props: HomeProps): JSX.Element {
         <div style={{position: "fixed", left: "1rem", top: "1rem"}}>Turn : {gameState.turn}</div>
         {testing && <TestLoader setGameState={setGameState} />}
         <div className={styles.grid}>
-          <div>
-            {gameState.piecesTaken.filter(f => f.team === 'black').map(field => <div><Image height="30%" width="30%" src={`/img/${field.team}-${field.piece}.svg`} /></div>)}
-          </div>
+          {/* <div>
+            {gameState.piecesTaken.filter(f => f.team === 'black').map((field, i) => <div key={i}><Image  height="30%" width="30%" src={`/img/${field.team}-${field.piece}.svg`} /></div>)}
+          </div> */}
           <Board
             debug={testing}
             debugUseNotation={testing}
@@ -85,9 +85,9 @@ function Home(props: HomeProps): JSX.Element {
             highlight={chess.allValidMoves(selectedField?.pos!, gameState)}
             pieceOnClick={handleOnPieceClick}
           />
-          <div>
-            {gameState.piecesTaken.filter(f => f.team === 'white').map(field => <div><Image height="30%" width="30%" src={`/img/${field.team}-${field.piece}.svg`} /></div>)}
-          </div>
+          {/* <div>
+            {gameState.piecesTaken.filter((f) => f.team === 'white').map((field, i) => <div key={i}><Image height="30%" width="30%" src={`/img/${field.team}-${field.piece}.svg`} /></div>)}
+          </div> */}
         </div>
       </main>
     </div>

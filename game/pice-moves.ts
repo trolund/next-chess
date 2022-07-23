@@ -135,11 +135,7 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
         return fromField.team !== toField.team
     }
 
-    const bishop = (from: pos, to: pos, state: gameState) => {
-        return bishopCanMove(from, to, state)
-    }
-
-    const bishopCanMove = (from: pos, to: pos, state: gameState) => {        
+    const bishop = (from: pos, to: pos, state: gameState) => {        
 
         if(from.col === to.col && from.row === to.row) return false // The piece there should be moved
 
@@ -184,14 +180,10 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
             }
         }
 
-        
-        
-
         // Check target cell
         if (IsEmpty({col: to.col, row: to.row}, state)) return true; // No piece: move is valid
 
         // There's a piece here: the move is valid only if we can capture
-        console.log("hej!!!!", chess.notation(to));
         const fromField = chess.getFieldAtPos(from, state)
         const toField = chess.getFieldAtPos(to, state)
         return toField.team !== fromField.team
@@ -333,4 +325,4 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
 
 
 
-export {pawn, king, knight, bishopCanMove, bishop}
+export {pawn, king, knight, bishop}
