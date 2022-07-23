@@ -1,5 +1,5 @@
 import { chess } from '../../game/game'
-import { board, field, gameState, piece, simpleBoard, simplePiece, team, pos, chessPosList } from '../../game/types/game-types'
+import { board, field, gameState, piece, simpleBoard, simplePiece, team, pos, chessPosList, action, chessPos } from '../../game/types/game-types'
 
 export module testUtil {
 
@@ -92,6 +92,20 @@ export module testUtil {
                 console.log(sb[row][col])
             }
         }
+    }
+
+    export const printActions = (actions: action[]) => {
+        let s = ""
+        actions.forEach(a => {
+            s = s + printAction(a)
+        })
+        console.log(s);
+    }
+
+    const printAction = (action: action) => {
+        const from: chessPos | string = typeof action.from === "string" ? action.from : chess.notation(action.from)
+        const to: chessPos | string = typeof action.to === "string" ? action.to : chess.notation(action.to)
+        return `${from} --> ${to}\n`
     }
 
     export const posArrayToNotationArray = (a: pos[]): chessPosList => {

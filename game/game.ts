@@ -1,6 +1,6 @@
 import { colOptions } from "./col-options"
 import { bishop, king, knight, pawn, queen, rook } from "./move-validator"
-import { action, board, field, gameState, piece, pos, team } from "./types/game-types"
+import { action, board, chessPos, field, gameState, piece, pos, team } from "./types/game-types"
 
 export module chess {
 
@@ -124,7 +124,6 @@ export module chess {
         }
 
         return validMoves
-
     }
 
     export const validMovesFrom = (fromPos: pos | string, state: gameState): pos[] => {
@@ -193,7 +192,7 @@ export module chess {
         }
     }
 
-    export const notation = (pos: pos): string => {
+    export const notation = (pos: pos): string | chessPos => {
         return `${colOptions[pos.col]}${8 - pos.row}`
     }
 

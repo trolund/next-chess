@@ -71,4 +71,14 @@ it('queen can´t move', () => {
   expect(E8).toStrictEqual([])
 })
 
+it('all valid moves as white from state', () => {
+  const moves = chess.allValidMoves(state)
+  // testUtil.printActions(moves)
+  // there is 20 initial moves that can be done in chess
+  // https://chess.stackexchange.com/questions/18727/how-many-initial-moves-are-possible-in-chess-20-or-21
+  expect(moves).toHaveLength(20)  
+})
+
 export {}
+
+
