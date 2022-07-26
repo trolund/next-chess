@@ -3,6 +3,7 @@ import { testUtil } from "../test/utils/testUtil"
 import { colOptions } from "./col-options"
 import { bishop, king, knight, pawn, pawnAttack, queen, rook } from "./move-validator"
 import { action, board, chessPos, field, gameState, piece, pos, team } from "./types/game-types"
+import _ from "lodash"
 
 export module chess {
 
@@ -68,13 +69,14 @@ export module chess {
     }
 
     // not done
-    export const move = (fromPos: pos, toPos: pos, prevState: gameState): gameState => {
+    export const move = (fromPos: pos, toPos: pos, prevState: gameState, checkValidity: boolean = true): gameState => {
 
         // throw error if the move is not valid
-        if (!isValidMove(fromPos, toPos, prevState)) throw new Error("This is not a valid move!")
+        if (checkValidity && !isValidMove(fromPos, toPos, prevState)) throw new Error("This is not a valid move!")
 
-        const board = prevState.board;
-        const teamsTurn = prevState.turn;
+        const newState = _.cloneDeep(prevState);
+        const board = newState.board;
+        const teamsTurn = newState.turn;
 
         const from = board[fromPos.row][fromPos.col];
         const to = board[toPos.row][toPos.col];
@@ -93,19 +95,19 @@ export module chess {
         const tempPiece = from.piece;
 
         // add 
-        if (prevState.board[toPos.row][toPos.col].piece != null) {
-            prevState.piecesTaken.push(prevState.board[toPos.row][toPos.col])
+        if (newState.board[toPos.row][toPos.col].piece != null) {
+            newState.piecesTaken.push(prevState.board[toPos.row][toPos.col])
         }
 
-        prevState.board[fromPos.row][fromPos.col].team = null
-        prevState.board[fromPos.row][fromPos.col].piece = null
+        newState.board[fromPos.row][fromPos.col].team = null
+        newState.board[fromPos.row][fromPos.col].piece = null
 
-        prevState.board[toPos.row][toPos.col].team = tempTeam
-        prevState.board[toPos.row][toPos.col].piece = tempPiece
+        newState.board[toPos.row][toPos.col].team = tempTeam
+        newState.board[toPos.row][toPos.col].piece = tempPiece
 
-        prevState.turn = prevState.turn === "white" ? "black" : "white"
+        newState.turn = newState.turn === "white" ? "black" : "white"
 
-        return prevState;
+        return newState;
     }
 
     export const allValidMoves = (state: gameState, attack: boolean = false): action[] => {
@@ -306,13 +308,9 @@ export module chess {
         const board: board = state.board
         const team: team = changeTeam(state.turn)
         const king: field = board.flat().filter(f => f.piece === "king" && f.team === state.turn)[0]   
+        const kingPos = notation(king.pos)     
 
-        if(!king){
-            throw "No king can be found"
-        }
-        
         const validMoves = onlyToPos(actionsCleanUp(allValidMoves({...state, turn: team}, true)))
-        const kingPos = notation(king.pos)  
         return validMoves.some(m => m === kingPos)
     }
 
