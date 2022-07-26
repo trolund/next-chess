@@ -295,11 +295,11 @@ export module chess {
 
         const kingsMoves = onlyToPos(actionsCleanUp(validMovesFrom(king.pos, {...state, turn: king.team}).map(to => ({from: king.pos, to } as action), true)))
         const validMoves = onlyToPos(actionsCleanUp(allValidMoves({...state, turn: team}, true)))
-
-        // console.log("king: ", king);
         
-        console.log("kings moves: ", kingsMoves);
-        console.log("valid moves: ", validMoves); // F7 is missing
+        // console.log("kings moves: ", kingsMoves)
+        // console.log("valid moves: ", validMoves)
+
+        if(kingsMoves.length === 0) return check(state)
 
         return !kingsMoves.some(km => !validMoves.includes(km))
     }

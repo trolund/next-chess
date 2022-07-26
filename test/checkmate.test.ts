@@ -1,12 +1,26 @@
 import { loadTestCase } from "./utils/fileLoader"
 import { chess } from "../game/game"
 
-// it('checkmate', () => {
-//   const state = loadTestCase(9)!
-//   expect(state).not.toBeNull()
+it('checkmate 1', () => {
+  const state = loadTestCase(9)!
+  expect(state).not.toBeNull()
   
-//   expect(chess.checkmate(state)).toBe(true)
-// })
+  expect(chess.checkmate(state)).toBe(true)
+})
+
+it('checkmate 2', () => {
+  const state = loadTestCase(3)!
+  expect(state).not.toBeNull()
+  
+  expect(chess.checkmate(state)).toBe(false)
+})
+
+it('checkmate 3', () => {
+  const state = loadTestCase(13)!
+  expect(state).not.toBeNull()
+  
+  expect(chess.checkmate(state)).toBe(true)
+})
 
 it('check - king is check', () => {
   const state = loadTestCase(9)!
