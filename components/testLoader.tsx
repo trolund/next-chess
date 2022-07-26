@@ -3,9 +3,10 @@ import { gameState } from "../game/types/game-types"
 
 interface TestLoader {
     setGameState: (s: gameState) => void
+    flipTurn: () => void
 }
 
-const TestLoader: FunctionComponent<TestLoader> = ({ setGameState }) => {
+const TestLoader: FunctionComponent<TestLoader> = ({ setGameState, flipTurn }) => {
 
     const [cases, setCases] = useState<string[]>([])
     const [selectedCase, setCase] = useState<string | null>(null)
@@ -41,6 +42,7 @@ const TestLoader: FunctionComponent<TestLoader> = ({ setGameState }) => {
     return (
         <div style={{position: "fixed", right: "1rem", top: "1rem", background: "#FFFFFF00"}}>
             <button style={{marginRight: "1rem"}} onClick={reset}>Reset</button>
+            <button style={{marginRight: "1rem"}} onClick={flipTurn}>Flip turn</button>
             <select name="cases" id="cases" onChange={caseSelect}>
                 {cases.map(c => <option key={c} value={c}>{c}</option>)}
             </select>

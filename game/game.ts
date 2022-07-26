@@ -1,6 +1,7 @@
+import { emptyBoard } from "../stores/emptyBoard"
 import { testUtil } from "../test/utils/testUtil"
 import { colOptions } from "./col-options"
-import { bishop, king, knight, pawn, queen, rook } from "./move-validator"
+import { bishop, king, knight, pawn, pawnAttack, queen, rook } from "./move-validator"
 import { action, board, chessPos, field, gameState, piece, pos, team } from "./types/game-types"
 
 export module chess {
@@ -107,7 +108,7 @@ export module chess {
         return prevState;
     }
 
-    export const allValidMoves = (state: gameState): action[] => {
+    export const allValidMoves = (state: gameState, attack: boolean = false): action[] => {
         const turn = state.turn
         const board = state.board
         const validMoves: action[] = []
@@ -116,7 +117,7 @@ export module chess {
             for (let j = 0; j < board[i].length; j++) {
                 const field = board[i][j]
                 if(field.team === turn){
-                    const movesFromField = validMovesFrom(field.pos, state)
+                    const movesFromField = validMovesFrom(field.pos, state, attack)
                     movesFromField.forEach(m => {
                         validMoves.push({ from: field.pos, to: m })
                     })
@@ -127,7 +128,7 @@ export module chess {
         return validMoves
     }
 
-    export const validMovesFrom = (fromPos: pos | string, state: gameState): pos[] => {
+    export const validMovesFrom = (fromPos: pos | string, state: gameState, attack: boolean = false): pos[] => {
 
         let fromPosParsed: pos;
 
@@ -146,7 +147,60 @@ export module chess {
         state.board.forEach((row, i) => {
             row.forEach((field, j) => {
                 const pos: pos = { row: i, col: j };
-                if (isValidMove(fromPosParsed, pos, state)) {
+                if (isValidMove(fromPosParsed, pos, state, attack)) {
+                    validMoves.push(pos)
+                }
+            })
+        });
+
+        return validMoves;
+    }
+
+    export const allReachableMoves = (state: gameState): action[] => {
+        const turn = state.turn
+        const board = state.board
+        const validMoves: action[] = []
+
+        for (let i = 0; i < board.length; i++) {
+            for (let j = 0; j < board[i].length; j++) {
+                const field = board[i][j]
+                if(field.team === turn){
+                    const movesFromField = reachableFrom(field.pos, state)
+                    movesFromField.forEach(m => {
+                        validMoves.push({ from: field.pos, to: m } as action)
+                    })
+                }
+            }
+        }
+
+        return validMoves
+    }
+
+    export const reachableFrom = (from: pos | string, state: gameState): pos[] => {
+
+        const piece = getFieldAtPos(typeof from === "string" ? toPos(from): from, state)
+        const cleanState = testUtil.createTestGame(emptyBoard, state.turn)
+
+        cleanState.board[piece.pos.row][piece.pos.col] = piece
+
+        let fromPosParsed: pos;
+
+        if (!from || !state) {
+            return []
+        }
+
+        if(typeof from === "string"){
+            fromPosParsed = toPos(from)            
+        }else {
+            fromPosParsed = from;
+        }
+
+        const validMoves: pos[] = [];
+
+        cleanState.board.forEach((row, i) => {
+            row.forEach((field, j) => {
+                const pos: pos = { row: i, col: j };
+                if (isValidMove(fromPosParsed, pos, cleanState, true)) {
                     validMoves.push(pos)
                 }
             })
@@ -159,7 +213,7 @@ export module chess {
         return state.board[pos.row][pos.col]
     }
 
-    export const isValidMove = (from: pos, to: pos, state: gameState): boolean => {
+    export const isValidMove = (from: pos, to: pos, state: gameState, attack: boolean = false): boolean => {
         let pieceField: field
 
         try{
@@ -177,7 +231,7 @@ export module chess {
         }
 
         if (pieceType === "pawn") {
-            return pawn(from, to, state)
+            return attack ? pawnAttack(from, to, state, attack) : pawn(from, to, state)
         } else if (pieceType === "bishop") {            
             return bishop(from, to, state) 
         } else if (pieceType == "knight") {
@@ -200,6 +254,11 @@ export module chess {
     export const actionsCleanUp = (actions: action[]): action[] => {
         return actions.map(a => ({from: typeof a.from !== "string" ? notation(a.from) : a.from, to: typeof a.to !== "string" ? notation(a.to) : a.to } as action))
     }
+
+    export const onlyToPos = (actions: action[]): (pos | chessPos)[] => {
+        return actions.map(a => a.to)
+    }
+
 
     export const notationComponents = (pos: pos): { number: number, char: string } => {
         return { number: 8 - pos.row, char: colOptions[pos.col] }
@@ -224,20 +283,37 @@ export module chess {
     const changeTeam = (turn: team): team => turn === "white" ? "black" : "white"
 
     // https://simple.wikipedia.org/wiki/Check_and_checkmate
+    // filter pawns moves right in front if it out. (den kan ikke tage en modtander ved at gå frem)
+    // led brikkerne tage deres egne med-spillere
+    // TODO
     export function checkmate(state: gameState): boolean {
         const board: board = state.board
         const team: team = changeTeam(state.turn)
-        const king: field = board.filter(row => row.filter(f => f.piece === "king" && f.team === team)).flat()[0]
-        testUtil.printBoard(board)
-        const kingsMoves = actionsCleanUp(validMovesFrom(king.pos, {...state, turn: king.team}).map(to => ({from: king.pos, to } as action)))
-        const validMoves = actionsCleanUp(allValidMoves({...state, turn: team}))
+        const king: field = board.flat().filter(f => f.piece === "king")[0]        
 
-        console.log("king: ", king);
+        const kingsMoves = onlyToPos(actionsCleanUp(validMovesFrom(king.pos, {...state, turn: king.team}).map(to => ({from: king.pos, to } as action), true)))
+        const validMoves = onlyToPos(actionsCleanUp(allValidMoves({...state, turn: team}, true)))
+
+        // console.log("king: ", king);
         
         console.log("kings moves: ", kingsMoves);
-        console.log("valid moves: ", validMoves);
+        console.log("valid moves: ", validMoves); // F7 is missing
 
-        return kingsMoves.some(km => validMoves.includes(km))
+        return !kingsMoves.some(km => !validMoves.includes(km))
+    }
+
+    export function check(state: gameState): boolean {
+        const board: board = state.board
+        const team: team = changeTeam(state.turn)
+        const king: field = board.flat().filter(f => f.piece === "king" && f.team === state.turn)[0]   
+
+        if(!king){
+            throw "No king can be found"
+        }
+        
+        const validMoves = onlyToPos(actionsCleanUp(allValidMoves({...state, turn: team}, true)))
+        const kingPos = notation(king.pos)  
+        return validMoves.some(m => m === kingPos)
     }
 
 }

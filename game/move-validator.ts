@@ -12,7 +12,7 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
                 || startPawn(from, to, state, notOccupied) // from starting position the pawn can move to steps forward
     }
 
-    const pawnAttack = (from: pos, to: pos, state: gameState): boolean => {
+    const pawnAttack = (from: pos, to: pos, state: gameState, attack: boolean = false): boolean => {
         const direction = state.turn === "black" ? -1 : 1
 
         const right = (to.col - 1) === from.col && from.row === (to.row + direction)
@@ -21,6 +21,7 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
         const field = chess.getFieldAtPos(to, state)
 
         if (right || left) {
+            if(attack) return true
             return field?.team !== state.turn && field.piece !== null
         } 
 
@@ -345,4 +346,4 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
 
 
 
-export {pawn, king, knight, bishop, queen, rook}
+export {pawn, king, knight, bishop, queen, rook, pawnAttack}
