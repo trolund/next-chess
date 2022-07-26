@@ -14,6 +14,12 @@ it('check - king is check', () => {
   expect(chess.check(state)).toBe(true)
 })
 
+it('check - king is check', () => {
+  const state = loadTestCase(12)!
+  expect(state).not.toBeNull()
+  expect(chess.check(state)).toBe(true)
+})
+
 it('check - king is check, 2', () => {
   const state = loadTestCase(10)!
   expect(state).not.toBeNull()

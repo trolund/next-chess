@@ -56,7 +56,7 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
         const rowLength = Math.abs(to.row - from.row)
 
         if(colLength > 1 || rowLength > 1) return false
-        // if(isNewPosInCheck(to, from, state)) return false
+        // TODO if(isNewPosInCheck(to, from, state)) return false // Notice the King cannot check another king because it would be putting itself into check by doing so.
 
         return ((to.col === from.col 
             && isNotMyPiece(from, to, state) 
@@ -66,7 +66,7 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
             || bishop(from, to, state))
     }
 
-    const isNewPosInCheck = (from: pos, to: pos, state: gameState) => {
+    const isNewPosInCheck = (from: pos, to: pos, state: gameState) => { // Notice the King cannot check another king because it would be putting itself into check by doing so.
         const newState = chess.move(from, to, state, false)
         return chess.check(newState, false)
     }
