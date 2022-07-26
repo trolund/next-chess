@@ -56,21 +56,19 @@ import { board, diagonal, field, gameState, pos } from "./types/game-types";
         const rowLength = Math.abs(to.row - from.row)
 
         if(colLength > 1 || rowLength > 1) return false
+        // if(isNewPosInCheck(to, from, state)) return false
 
         return ((to.col === from.col 
             && isNotMyPiece(from, to, state) 
             && isPieceBetweenCol(from, to, state)) || (to.row === from.row 
             && isNotMyPiece(from, to, state) 
-            && isPieceBetweenRow(from, to, state)
-            && isNewPosInCheck(from, to, state)) // Notice the King cannot check another king because it would be putting itself into check by doing so.
+            && isPieceBetweenRow(from, to, state)) // Notice the King cannot check another king because it would be putting itself into check by doing so.
             || bishop(from, to, state))
     }
 
     const isNewPosInCheck = (from: pos, to: pos, state: gameState) => {
         const newState = chess.move(from, to, state, false)
-
-
-        return true
+        return chess.check(newState, false)
     }
 
     const rook = (from: pos, to: pos, state: gameState) => {

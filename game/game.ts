@@ -110,7 +110,7 @@ export module chess {
         return newState;
     }
 
-    export const allValidMoves = (state: gameState, attack: boolean = false): action[] => {
+    export const allValidMoves = (state: gameState, attack: boolean = false, checkValidity: boolean = true): action[] => {
         const turn = state.turn
         const board = state.board
         const validMoves: action[] = []
@@ -119,7 +119,7 @@ export module chess {
             for (let j = 0; j < board[i].length; j++) {
                 const field = board[i][j]
                 if(field.team === turn){
-                    const movesFromField = validMovesFrom(field.pos, state, attack)
+                    const movesFromField = validMovesFrom(field.pos, state, attack, checkValidity)
                     movesFromField.forEach(m => {
                         validMoves.push({ from: field.pos, to: m })
                     })
@@ -130,7 +130,7 @@ export module chess {
         return validMoves
     }
 
-    export const validMovesFrom = (fromPos: pos | string, state: gameState, attack: boolean = false): pos[] => {
+    export const validMovesFrom = (fromPos: pos | string, state: gameState, attack: boolean = false, checkValidity: boolean = true): pos[] => {
 
         let fromPosParsed: pos;
 
@@ -149,7 +149,7 @@ export module chess {
         state.board.forEach((row, i) => {
             row.forEach((field, j) => {
                 const pos: pos = { row: i, col: j };
-                if (isValidMove(fromPosParsed, pos, state, attack)) {
+                if (!checkValidity || isValidMove(fromPosParsed, pos, state, attack)) {
                     validMoves.push(pos)
                 }
             })
@@ -304,13 +304,13 @@ export module chess {
         return !kingsMoves.some(km => !validMoves.includes(km))
     }
 
-    export function check(state: gameState): boolean {
+    export function check(state: gameState, checkValidity: boolean = true): boolean {
         const board: board = state.board
         const team: team = changeTeam(state.turn)
         const king: field = board.flat().filter(f => f.piece === "king" && f.team === state.turn)[0]   
         const kingPos = notation(king.pos)     
 
-        const validMoves = onlyToPos(actionsCleanUp(allValidMoves({...state, turn: team}, true)))
+        const validMoves = onlyToPos(actionsCleanUp(allValidMoves({...state, turn: team}, true, checkValidity)))
         return validMoves.some(m => m === kingPos)
     }
 
