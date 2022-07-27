@@ -52,8 +52,6 @@ function Home(props: HomeProps): JSX.Element {
   }
 
   useEffect(() => {
-    console.log(selectedTransformation, move, modal);
-    
     if(selectedTransformation && move){
       doMove(move.from as pos, move.to as pos, selectedTransformation)
       setSelectedField(null)
@@ -64,7 +62,6 @@ function Home(props: HomeProps): JSX.Element {
       setSelectedField(null)
       setMove(null)
     }
-
   }, [move, selectedTransformation])
 
   const canTransform = (fromField: field, to: pos) => (fromField.team === "black" && to.row === 7) || (fromField.team === "white" && to.row === 0)
