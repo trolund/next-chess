@@ -3,12 +3,12 @@ import styles from '../styles/Home.module.css'
 import { chess } from '../game/game'
 import Board from '../components/board'
 import { DataStore } from '../stores/dataStore'
-import { useState } from 'react'
-import Image from 'next/image'
+import { useEffect, useState } from 'react'
 import { testUtil } from '../test/utils/testUtil'
-import { field, gameState, pos, simpleBoard } from '../game/types/game-types'
+import { action, field, gameState, piece, pos, team } from '../game/types/game-types'
 import TestLoader from '../components/testLoader'
 import { emptyBoard } from '../stores/emptyBoard'
+import TransformationModal from '../components/transformationModal'
 
 interface HomeProps {
   dataStore?: DataStore;
@@ -18,12 +18,13 @@ function Home(props: HomeProps): JSX.Element {
 
   const testing = true
 
-  //const startState = createGame()
   const startState = testUtil.createTestGame(emptyBoard)
 
-  const [gameState, setGameState] = useState<gameState>(startState);
-  const [selectedField, setSelectedField] = useState<field | null>(null);
-  // const [validMoves, setValidMoves] = useState<pos[]>();
+  const [gameState, setGameState] = useState<gameState>(startState)
+  const [selectedField, setSelectedField] = useState<field | null>(null)
+  const [selectedTransformation, setTransformation] = useState<piece | null>(null)
+  const [modal, setModal] = useState<boolean>(false)
+  const [move, setMove] = useState<action | null>()
 
   const setState = (s: gameState) => {
     setGameState({
@@ -37,24 +38,50 @@ function Home(props: HomeProps): JSX.Element {
     setState({...gameState, turn: gameState.turn === "white" ? "black" : "white"})
   }
 
-  const doMove = (from: pos, to: pos) => {
-    try {
-      setState(chess.move(from, to, gameState))
-      console.log(chess.notation(from) + " to " + chess.notation(to))
-    } catch (e) {
-      console.log((e as Error).message);
-    }
+  const doMove = (from: pos, to: pos, transformOption: piece = null) => {
+        try {
+          if(transformOption){
+            setState(chess.move(from, to, gameState, true, transformOption))
+          }else {
+            setState(chess.move(from, to, gameState))
+          }
+          console.log(chess.notation(from) + " to " + chess.notation(to))
+        } catch (e) {
+          console.log((e as Error).message)
+        }
   }
 
+  useEffect(() => {
+    console.log(selectedTransformation, move, modal);
+    
+    if(selectedTransformation && move){
+      doMove(move.from as pos, move.to as pos, selectedTransformation)
+      setSelectedField(null)
+      setMove(null)
+      setTransformation(null)
+    }else if(move && !modal){
+      doMove(move.from as pos, move.to as pos)
+      setSelectedField(null)
+      setMove(null)
+    }
+
+  }, [move, selectedTransformation])
+
+  const canTransform = (fromField: field, to: pos) => (fromField.team === "black" && to.row === 7) || (fromField.team === "white" && to.row === 0)
 
   const handleOnPieceClick = (f: field) => {
     logFieldClick(f)
-
     if (selectedField) {
-      const to = f.pos!;
-      const from = selectedField.pos!;
-      doMove(from, to)
-      setSelectedField(null)
+      const to = f.pos!
+      const from = selectedField.pos!
+    
+      // special case: if transform should be done
+      if(selectedField.piece === "pawn" && canTransform(selectedField, to)){
+        setModal(true)
+        setMove({to, from})
+      }else { 
+        setMove({to, from})
+      }
     } else if (f.piece && f.team === gameState.turn) {
       setSelectedField(f)
     }
@@ -80,6 +107,8 @@ function Home(props: HomeProps): JSX.Element {
           {/* <div>
             {gameState.piecesTaken.filter(f => f.team === 'black').map((field, i) => <div key={i}><Image  height="30%" width="30%" src={`/img/${field.team}-${field.piece}.svg`} /></div>)}
           </div> */}
+          <p>{modal}</p>
+          <TransformationModal isOpen={modal} setIsOpen={setModal} setSelected={setTransformation} />
           <Board
             debug={testing}
             debugUseNotation={testing}
