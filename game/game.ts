@@ -69,17 +69,17 @@ export module chess {
     }
 
     // not done
-    export const move = (fromPos: pos, toPos: pos, prevState: gameState, checkValidity: boolean = true): gameState => {
+    export const move = (fromPos: pos, toPos: pos, prevState: gameState, checkValidity: boolean = true, transformation: piece = null): gameState => {
 
         // throw error if the move is not valid
         if (checkValidity && !isValidMove(fromPos, toPos, prevState)) throw new Error("This is not a valid move!")
 
-        const newState = _.cloneDeep(prevState);
-        const board = newState.board;
-        const teamsTurn = newState.turn;
+        const newState = _.cloneDeep(prevState)
+        const board = newState.board
+        const teamsTurn = newState.turn
 
-        const from = board[fromPos.row][fromPos.col];
-        const to = board[toPos.row][toPos.col];
+        const from = board[fromPos.row][fromPos.col]
+        const to = board[toPos.row][toPos.col]
 
         // fail if no piece is present 
         if (from.piece === null) throw new Error("There is no piece to move on position " + formatPos(fromPos))
@@ -94,20 +94,27 @@ export module chess {
         const tempTeam = from.team;
         const tempPiece = from.piece;
 
-        // add 
+        // add to captured pices
         if (newState.board[toPos.row][toPos.col].piece != null) {
             newState.piecesTaken.push(prevState.board[toPos.row][toPos.col])
         }
 
+        // from field become empty
         newState.board[fromPos.row][fromPos.col].team = null
         newState.board[fromPos.row][fromPos.col].piece = null
 
+        // place the piece on new field
         newState.board[toPos.row][toPos.col].team = tempTeam
-        newState.board[toPos.row][toPos.col].piece = tempPiece
+        // transform pawn
+        if(transformation){
+            newState.board[toPos.row][toPos.col].piece = transformation as piece
+        }else {
+            newState.board[toPos.row][toPos.col].piece = tempPiece
+        }
 
-        newState.turn = newState.turn === "white" ? "black" : "white"
+        newState.turn = changeTeam(newState.turn)
 
-        return newState;
+        return newState
     }
 
     export const allValidMoves = (state: gameState, attack: boolean = false, checkValidity: boolean = true): action[] => {
@@ -223,8 +230,6 @@ export module chess {
         }catch(e: any){
             return false
         }
-        
-        // const toField: field = state.board[to.row][to.col];
 
         const pieceType = pieceField.piece;
 
