@@ -1,0 +1,17 @@
+.modal {
+    position: fixed;
+    position: fixed;
+    width: 300px;
+    height: 150px;
+    top: 50%;
+    left: 50%;
+    margin-top: -75px; /* Negative half of height. */
+    margin-left: -150px; /* Negative half of width. */
+    background-color: rgba(255, 255, 255, 0.956);
+    border-radius: 1rem;
+    border: 1px;
+    border-color: whitesmoke;
+    border-style: solid;
+    z-index: 99999999;
+    padding: 1.5rem;
+}

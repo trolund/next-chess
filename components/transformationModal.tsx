@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import styles from '../styles/transformationModal.module.css'
 import { piece, team } from "../game/types/game-types"
 
 interface HomeProps {
@@ -28,7 +29,7 @@ function TransformationModal({isOpen, setIsOpen, setSelected: set}: HomeProps): 
     
     return (
     <>
-      {isOpen && <div>
+      {isOpen && <div className={styles.modal}>
         <h2>Options</h2>
         <select name="cases" id="cases" onChange={caseSelect} value={String(selected ?? "empty")}>
                 <option key={"empty"} value={"empty"}> - Select piece type - </option>
