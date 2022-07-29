@@ -11,16 +11,13 @@ it('to pos translation', () => {
 })
 
 it('to pos faild translation', () => {
-  try {  
-      expect(chess.toPos("8C")).toThrow()
-      expect(chess.toPos("")).toThrow()
-      expect(chess.toPos("hej")).toThrow()
-      expect(chess.toPos("C9")).toThrow()
-      expect(chess.toPos("C-9")).toThrow()
-      expect(chess.toPos("C100")).toThrow()
-      expect(chess.toPos("X1")).toThrow()
-
-  } catch (_) {}
+      expect(() => chess.toPos("8C")).toThrow()
+      expect(() => chess.toPos("")).toThrow()
+      expect(() => chess.toPos("hej")).toThrow()
+      expect(() => chess.toPos("C9")).toThrow()
+      expect(() => chess.toPos("C-9")).toThrow()
+      expect(() => chess.toPos("C100")).toThrow()
+      expect(() => chess.toPos("X1")).toThrow()
 })  
 
 it('to pos translation', () => {
@@ -97,7 +94,6 @@ it('too small', () => {
 })
 
 it('createTestGame with wrong board', () => {
-  try{
     const wrongBoard: simpleBoard = [ ["#", "#", "#", "#", "#", "#", "#"],
     ["#", "#", "#", "#", "#", "#", "#"],
     ["#", "#", "#", "#", "#", "#", "#"],
@@ -106,8 +102,7 @@ it('createTestGame with wrong board', () => {
     ["#", "#", "#", "#", "#", "#", "#"],
     ["#", "#", "#", "#", "#", "#", "#"],
     ["#", "#", "#", "#", "#", "#", "#"]]
-    expect(testUtil.createTestGame(wrongBoard)).toThrow()
-  } catch(_){}
+    expect(() => testUtil.createTestGame(wrongBoard)).toThrow()
 })
 
 

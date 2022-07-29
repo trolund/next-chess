@@ -41,13 +41,9 @@ it('check - king is check, 2', () => {
 })
 
 it('check - no King?', () => {
-  try{
     const state = loadTestCase(2)!
     expect(state).not.toBeNull()
-    expect(chess.check(state)).toThrow()
-  }catch (e) {
-
-  }
+    expect(() => chess.check(state)).toThrow()
 })
 
 it('check - king is NOT check', () => {

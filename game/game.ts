@@ -119,6 +119,7 @@ export module chess {
         newState.board[toPos.row][toPos.col].team = tempTeam
         // transform pawn
         if(moveOptions?.transformation){
+            if(moveOptions.transformation === "king")  throw new Error("Player cannot get an extra king")
             newState.board[toPos.row][toPos.col].piece = moveOptions?.transformation as piece
         }else {
             newState.board[toPos.row][toPos.col].piece = tempPiece

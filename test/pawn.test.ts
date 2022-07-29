@@ -54,9 +54,7 @@ it('pwan transformation should fail becuse of missing option', () => {
   expect(state).not.toBeNull()
   const A2 = testUtil.posArrayToNotationArray(chess.validMovesFrom("A2", state).sort())     
   expect(A2).toStrictEqual(["A1"])
-  try{
-    expect(chess.move("F2", "F1", state)).toThrow()
-  }catch(_) {}
+    expect(() => chess.move("F2", "F1", state)).toThrow()
 })
 
 it('pwan should transform to a queen', () => {
@@ -68,5 +66,38 @@ it('pwan should transform to a queen', () => {
   expect(chess.getFieldAtPos("A1", newState).piece).toEqual("queen")
 })
 
+it('pwan should transform to a bishop', () => {
+  const state = loadTestCase(14)!
+  expect(state).not.toBeNull()
+  const A2 = testUtil.posArrayToNotationArray(chess.validMovesFrom("A2", state).sort())     
+  expect(A2).toStrictEqual(["A1"])
+  const newState = chess.move("A2", "A1", state, { transformation: "bishop" })
+  expect(chess.getFieldAtPos("A1", newState).piece).toEqual("bishop")
+})
 
-export {}
+it('pwan should transform to a bishop', () => {
+  const state = loadTestCase(14)!
+  expect(state).not.toBeNull()
+  // change turn to white
+  state.turn = "white"
+
+  const A7 = testUtil.posArrayToNotationArray(chess.validMovesFrom("A7", state).sort())     
+  expect(A7).toStrictEqual(["A8"])
+  const newState = chess.move("A7", "A8", state, { transformation: "rook" })
+  expect(chess.getFieldAtPos("A8", newState).piece).toEqual("rook")
+})
+
+it('pwan should NOT transform to a king', () => {
+  const state = loadTestCase(14)!
+  expect(state).not.toBeNull()
+  // change turn to white
+  state.turn = "white"
+  
+  const A7 = testUtil.posArrayToNotationArray(chess.validMovesFrom("A7", state).sort())     
+  expect(A7).toStrictEqual(["A8"])
+  expect(() => {
+    chess.move("A7", "A8", state, { transformation: "king" })
+  }).toThrowError()
+})
+
+
