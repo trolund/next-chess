@@ -68,8 +68,7 @@ export module chess {
         }
     }
 
-    const canTransform = (fromField: field, to: pos) => (fromField.team === "black" && to.row === 7) || (fromField.team === "white" && to.row === 0)
-
+    const canTransform = (fromField: field, to: pos) => fromField.piece === "pawn" && ((fromField.team === "black" && to.row === 7) || (fromField.team === "white" && to.row === 0))
 
     // not done
     export const move = (fpos: pos | chessPos, tpos: pos | chessPos, prevState: gameState, moveOptions?: moveOptions): gameState => {
@@ -91,7 +90,7 @@ export module chess {
         const to = board[toPos.row][toPos.col]
 
         // make sure that a pwan transformation have the transformation input
-        if(from.piece === "pawn" && canTransform(from, toPos) && !moveOptions?.transformation) throw new Error("The move most include what type of pice the should transform into")
+        if(canTransform(from, toPos) && !moveOptions?.transformation) throw new Error("The move most include what type of pice the should transform into")
 
         // fail if no piece is present 
         if (from.piece === null) throw new Error("There is no piece to move on position " + formatPos(fromPos))
@@ -117,14 +116,15 @@ export module chess {
 
         // place the piece on new field
         newState.board[toPos.row][toPos.col].team = tempTeam
+        newState.board[toPos.row][toPos.col].piece = tempPiece
+
         // transform pawn
-        if(moveOptions?.transformation){
+        if(canTransform(newState.board[toPos.row][toPos.col], toPos) && moveOptions?.transformation){
             if(moveOptions.transformation === "king")  throw new Error("Player cannot get an extra king")
             newState.board[toPos.row][toPos.col].piece = moveOptions?.transformation as piece
-        }else {
-            newState.board[toPos.row][toPos.col].piece = tempPiece
         }
 
+        // change too the other players turn
         newState.turn = changeTeam(newState.turn)
 
         return newState
