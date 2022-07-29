@@ -64,7 +64,7 @@ it('pwan should transform to a queen', () => {
   expect(state).not.toBeNull()
   const A2 = testUtil.posArrayToNotationArray(chess.validMovesFrom("A2", state).sort())     
   expect(A2).toStrictEqual(["A1"])
-  const newState = chess.move("A2", "A1", state, true, "queen")
+  const newState = chess.move("A2", "A1", state, { transformation: "queen" })
   expect(chess.getFieldAtPos("A1", newState).piece).toEqual("queen")
 })
 

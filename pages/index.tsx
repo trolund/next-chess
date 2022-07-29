@@ -41,7 +41,7 @@ function Home(props: HomeProps): JSX.Element {
   const doMove = (from: pos, to: pos, transformOption: piece = null) => {
         try {
           if(transformOption){
-            setState(chess.move(from, to, gameState, true, transformOption))
+            setState(chess.move(from, to, gameState, { transformation: transformOption }))
           }else {
             setState(chess.move(from, to, gameState))
           }

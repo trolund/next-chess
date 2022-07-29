@@ -2,7 +2,7 @@ import { emptyBoard } from "../stores/emptyBoard"
 import { testUtil } from "../test/utils/testUtil"
 import { colOptions } from "./col-options"
 import { bishop, king, knight, pawn, pawnAttack, queen, rook } from "./move-validator"
-import { action, board, chessPos, field, gameState, piece, pos, team } from "./types/game-types"
+import { action, board, chessPos, field, gameState, moveOptions, piece, pos, team } from "./types/game-types"
 import _ from "lodash"
 
 export module chess {
@@ -70,24 +70,28 @@ export module chess {
 
     const canTransform = (fromField: field, to: pos) => (fromField.team === "black" && to.row === 7) || (fromField.team === "white" && to.row === 0)
 
-    // not done
-    export const move = (fpos: pos | chessPos, tpos: pos | chessPos, prevState: gameState, checkValidity: boolean = true, transformation: piece = null): gameState => {
 
+    // not done
+    export const move = (fpos: pos | chessPos, tpos: pos | chessPos, prevState: gameState, moveOptions?: moveOptions): gameState => {
+
+        // make sure to have positions as type pos
         const fromPos: pos = typeof fpos === "string" ? chess.toPos(String(fpos)) : fpos
         const toPos: pos = typeof tpos === "string" ? chess.toPos(String(tpos)) : tpos
 
         // throw error if the move is not valid
-        if (checkValidity && !isValidMove(fromPos, toPos, prevState)) throw new Error("This is not a valid move!")
+        if (moveOptions?.checkValidity && !isValidMove(fromPos, toPos, prevState)) throw new Error("This is not a valid move!")
 
+        // clone state to not operate/modify old state
         const newState = _.cloneDeep(prevState)
+
+        // unpack information
         const board = newState.board
         const teamsTurn = newState.turn
-
         const from = board[fromPos.row][fromPos.col]
         const to = board[toPos.row][toPos.col]
 
         // make sure that a pwan transformation have the transformation input
-        if(from.piece === "pawn" && canTransform(from, toPos) && !transformation) throw new Error("The move most include what type of pice the should transform into")
+        if(from.piece === "pawn" && canTransform(from, toPos) && !moveOptions?.transformation) throw new Error("The move most include what type of pice the should transform into")
 
         // fail if no piece is present 
         if (from.piece === null) throw new Error("There is no piece to move on position " + formatPos(fromPos))
@@ -114,8 +118,8 @@ export module chess {
         // place the piece on new field
         newState.board[toPos.row][toPos.col].team = tempTeam
         // transform pawn
-        if(transformation){
-            newState.board[toPos.row][toPos.col].piece = transformation as piece
+        if(moveOptions?.transformation){
+            newState.board[toPos.row][toPos.col].piece = moveOptions?.transformation as piece
         }else {
             newState.board[toPos.row][toPos.col].piece = tempPiece
         }

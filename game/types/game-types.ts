@@ -38,3 +38,8 @@
     }
 
     export type AIRes = {score: number, action: action}
+
+    export type moveOptions = { 
+        checkValidity?: boolean,
+        transformation?: piece          
+       } 
