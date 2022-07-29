@@ -38,7 +38,7 @@ export module agent {
         return chess.allValidMoves(state)
     }
 
-    function miniMax(state: gameState, depth: number = 3): action {
+    export function miniMax(state: gameState, depth: number = 3): action {
         const utilities: AIRes[] = []
 
         for (const action of getActions(state)) {
@@ -70,7 +70,7 @@ export module agent {
 
     function maxValue(state: gameState, depth: number = 3) {
 
-        if (terminal_test(state) || depth == 0) {
+        if (terminalTest(state) || depth == 0) {
             return evaluate(state, state.turn)
         }
 
@@ -90,8 +90,8 @@ export module agent {
     }
 
     function minValue(state: gameState, depth: number = 3) {
-        
-        if (terminal_test(state) || depth == 0) {
+
+        if (terminalTest(state) || depth == 0) {
             return evaluate(state, state.turn)
         }
 
@@ -112,6 +112,6 @@ export module agent {
 
 }
 
-function terminal_test(state: gameState): boolean {
-    return false
+function terminalTest(state: gameState): boolean {
+    return chess.checkmate(state)
 }
