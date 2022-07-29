@@ -36,3 +36,5 @@
         piecesTaken: field[];
         turn: team;
     }
+
+    export type AIRes = {score: number, action: action}

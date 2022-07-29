@@ -1,4 +1,5 @@
-import { gameState, piece, team } from "../game/types/game-types"
+import { chess } from "../game/game";
+import { action, AIRes, gameState, piece, team } from "../game/types/game-types"
 
 export module agent {
 
@@ -33,31 +34,81 @@ export module agent {
         }
     }
 
-    // function max_value(state: gameState, depth=3) {
-    //     if (terminal_test(state) || depth == 0) {
-    //         return self.eval_max_dif(state)
-    //     }
-    //     let v = -Infinity
-    //     for action in self.actions(state):
-    //         newState = self.result(state, action)
-    //         if newState.human_turn:  # spiller 1
-    //             v = max(v, self.min_value(newState, depth - 1))
-    //         else:
-    //             v = max(v, self.max_value(newState, depth - 1))
-    //     return v
-    // }
+    function getActions(state: gameState): action[] {
+        return chess.allValidMoves(state)
+    }
 
-    // function min_value(self, state: State, depth=3):
-    // if self.terminal_test(state) or depth == 0:
-    //     return self.eval_max_dif(state)
-    // let v = Infinity
-    // for action in self.actions(state):
-    //     newState = self.result(state, action)
-    //     if state.human_turn:
-    //         v = min(v, self.max_value(newState, depth - 1))
-    //     else:
-    //         v = min(v, self.min_value(newState, depth - 1))
-    // return v
+    function miniMax(state: gameState, depth: number = 3): action {
+        const utilities: AIRes[] = []
+
+        for (const action of getActions(state)) {
+            const newState = chess.move(action.from, action.to, state)
+
+            if(newState.turn === "white") {
+                utilities.push({ score: minValue(newState, depth), action})
+            }else {
+                utilities.push({ score: maxValue(newState, depth), action})
+            }
+        }
+
+        let finalAction: AIRes;
+
+        if (state.turn === "white"){
+            const mapped = utilities.map(x => x.score)
+            const max = Math.min(...mapped)
+            const index = mapped.indexOf(max)
+            finalAction = utilities[index]
+        }else {
+            const mapped = utilities.map(x => x.score)
+            const max = Math.max(...mapped)
+            const index = mapped.indexOf(max)
+            finalAction = utilities[index]
+        }
+        
+        return finalAction.action
+    }
+
+    function maxValue(state: gameState, depth: number = 3) {
+
+        if (terminal_test(state) || depth == 0) {
+            return evaluate(state, state.turn)
+        }
+
+        let v = -Infinity
+
+        for (const a of getActions(state)) {
+            const newState = chess.move(a.from, a.to, state)
+
+            if (newState.turn === "white"){ // human turn
+                v = Math.max(v, minValue(newState, depth - 1))
+            }else {
+                v = Math.max(v, maxValue(newState, depth - 1))
+            }
+            
+        }
+        return v        
+    }
+
+    function minValue(state: gameState, depth: number = 3) {
+        
+        if (terminal_test(state) || depth == 0) {
+            return evaluate(state, state.turn)
+        }
+
+        let v = Infinity
+
+        for (const a of getActions(state)) {
+            const newState = chess.move(a.from, a.to, state)
+
+            if (newState.turn === "white"){ // human turn
+                v = Math.max(v, maxValue(newState, depth - 1))
+            }else {
+                v = Math.max(v, minValue(newState, depth - 1))
+            }
+            
+        }
+        return v        
+    }
 
 }
 

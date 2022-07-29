@@ -68,8 +68,13 @@ export module chess {
         }
     }
 
+    const canTransform = (fromField: field, to: pos) => (fromField.team === "black" && to.row === 7) || (fromField.team === "white" && to.row === 0)
+
     // not done
-    export const move = (fromPos: pos, toPos: pos, prevState: gameState, checkValidity: boolean = true, transformation: piece = null): gameState => {
+    export const move = (fpos: pos | chessPos, tpos: pos | chessPos, prevState: gameState, checkValidity: boolean = true, transformation: piece = null): gameState => {
+
+        const fromPos: pos = typeof fpos === "string" ? chess.toPos(String(fpos)) : fpos
+        const toPos: pos = typeof tpos === "string" ? chess.toPos(String(tpos)) : tpos
 
         // throw error if the move is not valid
         if (checkValidity && !isValidMove(fromPos, toPos, prevState)) throw new Error("This is not a valid move!")
@@ -80,6 +85,9 @@ export module chess {
 
         const from = board[fromPos.row][fromPos.col]
         const to = board[toPos.row][toPos.col]
+
+        // make sure that a pwan transformation have the transformation input
+        if(from.piece === "pawn" && canTransform(from, toPos) && !transformation) throw new Error("The move most include what type of pice the should transform into")
 
         // fail if no piece is present 
         if (from.piece === null) throw new Error("There is no piece to move on position " + formatPos(fromPos))
