@@ -226,7 +226,11 @@ export module chess {
         return validMoves;
     }
 
-    export const getFieldAtPos = (pos: pos, state: gameState): field => {
+    export const getFieldAtPos = (pos: pos | chessPos, state: gameState): field => {
+        if(typeof pos === "string"){
+            pos = toPos(pos)
+        }
+
         return state.board[pos.row][pos.col]
     }
 

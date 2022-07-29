@@ -49,5 +49,24 @@ it('pwan move rules, pwan atack - case 1', () => {
   expect(F2).toStrictEqual([chess.toPos("F4"), chess.toPos("F3"), chess.toPos("G3")].sort())
 })
 
+it('pwan transformation should fail becuse of missing option', () => {
+  const state = loadTestCase(14)!
+  expect(state).not.toBeNull()
+  const A2 = testUtil.posArrayToNotationArray(chess.validMovesFrom("A2", state).sort())     
+  expect(A2).toStrictEqual(["A1"])
+  try{
+    expect(chess.move("F2", "F1", state)).toThrow()
+  }catch(_) {}
+})
+
+it('pwan should transform to a queen', () => {
+  const state = loadTestCase(14)!
+  expect(state).not.toBeNull()
+  const A2 = testUtil.posArrayToNotationArray(chess.validMovesFrom("A2", state).sort())     
+  expect(A2).toStrictEqual(["A1"])
+  const newState = chess.move("A2", "A1", state, true, "queen")
+  expect(chess.getFieldAtPos("A1", newState).piece).toEqual("queen")
+})
+
 
 export {}
