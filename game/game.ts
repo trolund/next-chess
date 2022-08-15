@@ -288,6 +288,14 @@ export module chess {
         return { number: 8 - pos.row, char: colOptions[pos.col] }
     }
 
+    export const toPosSafe = (notation: string | chessPos | pos) => {
+        if(typeof notation === "string"){
+            return toPos(notation)
+        }
+
+        return notation
+    }
+
     export const toPos = (notation: string): pos => {
         const row: number = Number.parseInt(notation[1])
         const col: string = notation[0]        

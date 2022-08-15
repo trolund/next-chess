@@ -10,6 +10,8 @@ import TestLoader from '../components/testLoader'
 import { emptyBoard } from '../stores/emptyBoard'
 import TransformationModal from '../components/transformationModal'
 import { useRouter } from 'next/router'
+import { Agent, MinmaxAgent } from '../AI/Agent'
+import { isGenerator } from 'mobx/dist/internal'
 
 interface HomeProps {
   dataStore?: DataStore;
@@ -35,6 +37,48 @@ function Home(props: HomeProps): JSX.Element {
   const [selectedTransformation, setTransformation] = useState<piece | null>(null)
   const [modal, setModal] = useState<boolean>(false)
   const [move, setMove] = useState<action | null>()
+  const [players, setPlayers] = useState<(Agent | null)[]>([])
+  const [gameStarted, setGameStarted] = useState<boolean>(false)
+
+  const [disableUserInput, setDisableUserInput] = useState<boolean>(false)
+
+  useEffect(() => {
+
+    // doing the moves
+    if(gameStarted){
+      const isWhite = gameState.turn === "white"
+      const agent = isWhite ? players[0] : players[1]
+  
+      // if agent is not null and therefore is a AI user input must be looked for the user
+      if(!agent){ // null user most do move
+        setDisableUserInput(false)
+      }else {
+        console.log("🤖 AI MOVE");
+        setDisableUserInput(true)
+        AIMove(agent)
+      }
+    }
+
+  }, [gameState, gameStarted])
+
+  const AIMove = (agent: Agent) => {
+    const move = agent.FindMove(gameState)
+    doMove(chess.toPosSafe(move.from), chess.toPosSafe(move.to), "queen") // TODO: just always choses queen for know 
+  }
+
+  const chosePlayer = (event: React.ChangeEvent<HTMLSelectElement>, playerNum: number) => {
+    if(playerNum > 1 || playerNum < 0){
+      throw "only 2 players are allowed"
+    }
+    const p = players
+    p[playerNum] = mapAgent(event.target.value)
+    setPlayers(p)
+  }
+
+  const mapAgent = (agentType: string) => {
+      if(agentType === "Human player") return null
+      else return new MinmaxAgent(2)
+  }
 
   const setState = (s: gameState) => {
     setGameState({
@@ -50,6 +94,8 @@ function Home(props: HomeProps): JSX.Element {
 
   const doMove = (from: pos, to: pos, transformOption: piece = null) => {
         try {
+          if(!gameStarted) setGameStarted(true)
+
           if(transformOption){
             setState(chess.move(from, to, gameState, { transformation: transformOption }))
           }else {
@@ -114,23 +160,29 @@ function Home(props: HomeProps): JSX.Element {
           {/* <div>
             {gameState.piecesTaken.filter(f => f.team === 'black').map((field, i) => <div key={i}><Image  height="30%" width="30%" src={`/img/${field.team}-${field.piece}.svg`} /></div>)}
           </div> */}
-          {!inDebugMode && <div>
+          {(!inDebugMode && players.length === 0)  && <div>
             <h2>Mode</h2>
             <h3>Player 1</h3>
-            <select name="cases" id="cases">
+            <select name="cases" id="cases" onChange={(e) => chosePlayer(e, 0)}>
                 <option key={"empty"} value={"empty"}> - Select piece type - </option>
                 {playerTypes.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             <h3>Player 2</h3>
-            <select name="cases" id="cases">
+            <select name="cases" id="cases" onChange={(e) => chosePlayer(e, 1)}>
                 <option key={"empty"} value={"empty"}> - Select piece type - </option>
                 {playerTypes.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
+            <button onClick={() => { 
+              setGameState(chess.createGame())
+              setGameStarted(true) 
+              }}>Start game</button>
           </div>}
           <TransformationModal isOpen={modal} setIsOpen={setModal} setSelected={setTransformation} />
           <Board
+          
             debug={inDebugMode}
             debugUseNotation={inDebugMode}
+            disableUserInput={disableUserInput}
             selected={selectedField}
             board={gameState.board}
             turn={gameState.turn}

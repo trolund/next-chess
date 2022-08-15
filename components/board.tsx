@@ -12,9 +12,10 @@ interface BoardProps {
     selected: field | null;
     debug?: boolean;
     debugUseNotation?: boolean;
+    disableUserInput?: boolean;
 }
 
-const Board: FunctionComponent<BoardProps> = ({ board, highlight, pieceOnClick, turn, selected, debug, debugUseNotation }) => {
+const Board: FunctionComponent<BoardProps> = ({ board, highlight, pieceOnClick, turn, selected, debug, debugUseNotation, disableUserInput }) => {
 
     const label = (row: number, col: number): { bottom: string | null, left: string | null } => {
         const { number, char } = chess.notationComponents({ col, row })
@@ -41,7 +42,7 @@ const Board: FunctionComponent<BoardProps> = ({ board, highlight, pieceOnClick, 
                         highlight={highlight?.find(x => x.col === col && x.row === row) !== undefined}
                         selected={selected && selected?.pos && col === selected.pos.col && row === selected.pos.row}
                         turn={turn}
-                        onClick={pieceOnClick}
+                        onClick={disableUserInput ? () => { console.log("User input disabled") } : pieceOnClick}
                         key={"#" + row + "#" + col}
                         col={col}
                         row={row}
