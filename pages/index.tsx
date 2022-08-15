@@ -9,14 +9,24 @@ import { action, field, gameState, piece, pos, team } from '../game/types/game-t
 import TestLoader from '../components/testLoader'
 import { emptyBoard } from '../stores/emptyBoard'
 import TransformationModal from '../components/transformationModal'
+import { useRouter } from 'next/router'
 
 interface HomeProps {
   dataStore?: DataStore;
 };
 
+const playerTypes = ["Minimax", "Human player"]
+
 function Home(props: HomeProps): JSX.Element {
 
-  const testing = true
+  const router = useRouter()
+  const { debug } = router.query
+
+  const inDebugMode = (String(debug).toLowerCase() === 'true' || debug === '1') ? true : false 
+
+  if(inDebugMode){
+    console.debug("🧰 In debug mode!")
+  }
 
   const startState = testUtil.createTestGame(emptyBoard)
 
@@ -99,16 +109,28 @@ function Home(props: HomeProps): JSX.Element {
 
       <main className={styles.main}>
         <div style={{position: "fixed", left: "1rem", top: "1rem"}}>Turn : {gameState.turn}</div>
-        {testing && <TestLoader flipTurn={flipTurn} setGameState={setState} />}
+        {inDebugMode && <TestLoader flipTurn={flipTurn} setGameState={setState} />}
         <div className={styles.grid}>
           {/* <div>
             {gameState.piecesTaken.filter(f => f.team === 'black').map((field, i) => <div key={i}><Image  height="30%" width="30%" src={`/img/${field.team}-${field.piece}.svg`} /></div>)}
           </div> */}
-          <p>{modal}</p>
+          {!inDebugMode && <div>
+            <h2>Mode</h2>
+            <h3>Player 1</h3>
+            <select name="cases" id="cases">
+                <option key={"empty"} value={"empty"}> - Select piece type - </option>
+                {playerTypes.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <h3>Player 2</h3>
+            <select name="cases" id="cases">
+                <option key={"empty"} value={"empty"}> - Select piece type - </option>
+                {playerTypes.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>}
           <TransformationModal isOpen={modal} setIsOpen={setModal} setSelected={setTransformation} />
           <Board
-            debug={testing}
-            debugUseNotation={testing}
+            debug={inDebugMode}
+            debugUseNotation={inDebugMode}
             selected={selectedField}
             board={gameState.board}
             turn={gameState.turn}

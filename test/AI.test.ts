@@ -3,7 +3,7 @@ import { chess } from "../game/game"
 import { gameState } from "../game/types/game-types";
 import { testUtil } from "./utils/testUtil";
 import { colOptions } from "../game/col-options";
-import { agent } from "../AI/agent";
+import { Agent, MinmaxAgent } from "../AI/Agent";
 
 let state: gameState
 
@@ -12,8 +12,9 @@ beforeEach(() => {
   expect(state).not.toBeNull()
 });
 
-it('ai', () => {
-  const action = agent.miniMax(state, 2)
+it('ai minmax depth 2', () => {
+  const agent = new MinmaxAgent(2)
+  const action = agent.FindMove(state)
   console.log(action)
 })
 
