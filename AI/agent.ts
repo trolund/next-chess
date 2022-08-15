@@ -12,7 +12,7 @@ export abstract class Agent {
 
 export class MinmaxAgent extends Agent {
 
-    private depth: number = 3;
+    private depth: number = 3
 
     constructor(depth: number = 3) {
         super()
