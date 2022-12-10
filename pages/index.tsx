@@ -4,14 +4,12 @@ import { chess } from '../game/game'
 import Board from '../components/board'
 import { DataStore } from '../stores/dataStore'
 import { useEffect, useState } from 'react'
-import { testUtil } from '../test/utils/testUtil'
 import { action, field, gameState, piece, pos, team } from '../game/types/game-types'
 import TestLoader from '../components/testLoader'
-import { emptyBoard } from '../stores/emptyBoard'
 import TransformationModal from '../components/transformationModal'
 import { useRouter } from 'next/router'
 import { Agent, MinmaxAgent } from '../AI/Agent'
-import { isGenerator } from 'mobx/dist/internal'
+
 
 interface HomeProps {
   dataStore?: DataStore;
@@ -30,7 +28,8 @@ function Home(props: HomeProps): JSX.Element {
     console.debug("🧰 In debug mode!")
   }
 
-  const startState = testUtil.createTestGame(emptyBoard)
+ // const startState = testUtil.createTestGame(emptyBoard)
+  const startState = chess.createGame()
 
   const [gameState, setGameState] = useState<gameState>(startState)
   const [selectedField, setSelectedField] = useState<field | null>(null)
@@ -63,7 +62,7 @@ function Home(props: HomeProps): JSX.Element {
 
   const AIMove = (agent: Agent) => {
     const move = agent.FindMove(gameState)
-    doMove(chess.toPosSafe(move.from), chess.toPosSafe(move.to), "queen") // TODO: just always choses queen for know 
+    doMove(chess.toPosSafe(move.from), chess.toPosSafe(move.to), "queen") // TODO: just always choses queen for now 
   }
 
   const chosePlayer = (event: React.ChangeEvent<HTMLSelectElement>, playerNum: number) => {
@@ -77,7 +76,7 @@ function Home(props: HomeProps): JSX.Element {
 
   const mapAgent = (agentType: string) => {
       if(agentType === "Human player") return null
-      else return new MinmaxAgent(2)
+      else return new MinmaxAgent(5)
   }
 
   const setState = (s: gameState) => {
@@ -173,13 +172,11 @@ function Home(props: HomeProps): JSX.Element {
                 {playerTypes.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             <button onClick={() => { 
-              setGameState(chess.createGame())
               setGameStarted(true) 
               }}>Start game</button>
           </div>}
           <TransformationModal isOpen={modal} setIsOpen={setModal} setSelected={setTransformation} />
           <Board
-          
             debug={inDebugMode}
             debugUseNotation={inDebugMode}
             disableUserInput={disableUserInput}

@@ -44,6 +44,7 @@ const TestLoader: FunctionComponent<TestLoader> = ({ setGameState, flipTurn }) =
             <button style={{marginRight: "1rem"}} onClick={reset}>Reset</button>
             <button style={{marginRight: "1rem"}} onClick={flipTurn}>Flip turn</button>
             <select name="cases" id="cases" onChange={caseSelect}>
+                <option key={"no"} value={0}> -- choose case --</option>
                 {cases.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
         </div>

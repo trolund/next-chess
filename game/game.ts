@@ -301,7 +301,7 @@ export module chess {
         const col: string = notation[0]        
 
         if(notation.length !== 2 
-            || row === NaN 
+            || Number.isNaN(row) 
             || typeof col !== 'string'
             || !colOptions.includes(String(col)) 
             || colOptions.indexOf(col) === -1 

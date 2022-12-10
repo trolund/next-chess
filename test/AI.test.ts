@@ -24,16 +24,16 @@ it('ai minmax depth 2', () => {
   console.log(action, timer.getEndTimeAsDateString)
 })
 
-it('ai minmax depth 3', () => {
-  const timer = new Timer()
-  const agent = new MinmaxAgent(3)
+// it('ai minmax depth 3', () => {
+//   const timer = new Timer()
+//   const agent = new MinmaxAgent(3)
   
-  timer.start()
-  const action = agent.FindMove(state)
-  timer.end()
+//   timer.start()
+//   const action = agent.FindMove(state)
+//   timer.end()
 
-  console.log(action, timer.getEndTimeAsDateString)
-})
+//   console.log(action, timer.getEndTimeAsDateString)
+// })
 
 
 export {}

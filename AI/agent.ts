@@ -62,12 +62,16 @@ export class MinmaxAgent extends Agent {
         const utilities: AIRes[] = []
 
         for (const action of this.getActions(state)) {
-            const newState = chess.move(action.from, action.to, state)
+            try{
+                const newState = chess.move(action.from, action.to, state)
 
-            if(newState.turn === "white") {
-                utilities.push({ score: this.minValue(newState, depth), action})
-            }else {
-                utilities.push({ score: this.maxValue(newState, depth), action})
+                if(newState.turn === "white") {
+                    utilities.push({ score: this.minValue(newState, depth), action})
+                }else {
+                    utilities.push({ score: this.maxValue(newState, depth), action})
+                }
+            }catch {
+                console.log(action);               
             }
         }
 
@@ -97,7 +101,7 @@ export class MinmaxAgent extends Agent {
         let v = -Infinity
 
         for (const a of this.getActions(state)) {
-            const newState = chess.move(a.from, a.to, state)
+            const newState = chess.move(a.from, a.to, state, {transformation: "queen"})
 
             if (newState.turn === "white"){ // human turn
                 v = Math.max(v, this.minValue(newState, depth - 1))
