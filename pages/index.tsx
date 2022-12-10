@@ -42,13 +42,11 @@ function Home(props: HomeProps): JSX.Element {
   const [disableUserInput, setDisableUserInput] = useState<boolean>(false)
 
   useEffect(() => {
-
     // doing the moves
     if(gameStarted){
-      const isWhite = gameState.turn === "white"
-      const agent = isWhite ? players[0] : players[1]
+      const agent = chess.isWhite(gameState) ? players[0] : players[1]
   
-      // if agent is not null and therefore is a AI user input must be looked for the user
+      // if agent is not null and therefore is a AI input must be looked for the user
       if(!agent){ // null user most do move
         setDisableUserInput(false)
       }else {
@@ -88,7 +86,7 @@ function Home(props: HomeProps): JSX.Element {
   }
 
   const flipTurn = (): void => {
-    setState({...gameState, turn: gameState.turn === "white" ? "black" : "white"})
+    if(debug) setState({...gameState, turn: gameState.turn === "white" ? "black" : "white"})
   }
 
   const doMove = (from: pos, to: pos, transformOption: piece = null) => {

@@ -72,13 +72,14 @@ export module chess {
 
     // not done
     export const move = (fpos: pos | chessPos, tpos: pos | chessPos, prevState: gameState, moveOptions?: moveOptions): gameState => {
-
         // make sure to have positions as type pos
-        const fromPos: pos = typeof fpos === "string" ? chess.toPos(String(fpos)) : fpos
-        const toPos: pos = typeof tpos === "string" ? chess.toPos(String(tpos)) : tpos
+        const fromPos: pos = chess.toPosSafe(fpos)
+        const toPos: pos = chess.toPosSafe(tpos)
 
-        // throw error if the move is not valid
-        if (moveOptions?.checkValidity && !isValidMove(fromPos, toPos, prevState)) throw new Error("This is not a valid move!")
+        // if the move is not valid do not change the state.
+        if (!isValidMove(fromPos, toPos, prevState)){
+            throw new Error("Invalid move")
+        } 
 
         // clone state to not operate/modify old state
         const newState = _.cloneDeep(prevState)
@@ -342,6 +343,10 @@ export module chess {
 
         const validMoves = onlyToPos(actionsCleanUp(allValidMoves({...state, turn: team}, true, checkValidity)))
         return validMoves.some(m => m === kingPos)
+    }
+
+    export function isWhite(state: gameState): boolean{
+        return state.turn === "white"
     }
 
 }
