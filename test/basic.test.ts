@@ -1,8 +1,6 @@
 import { loadTestCase } from "./utils/fileLoader"
 import { chess } from "../game/game"
 import { gameState } from "../game/types/game-types";
-import { testUtil } from "./utils/testUtil";
-import { colOptions } from "../game/col-options";
 
 let state: gameState
 
@@ -16,6 +14,12 @@ it('move piece', () => {
     expect(state).not.toEqual(newState)
     expect(chess.getFieldAtPos(chess.toPos("D4"), newState).piece).toEqual("pawn")
     expect(chess.getFieldAtPos(chess.toPos("D4"), state).piece).toBeNull()
+})
+
+it('invalid move will throw', () => {
+  expect(() => {
+    const newState = chess.move(chess.toPos("D2"), chess.toPos("C3"), state) // invalid move for pawn
+  }).toThrow("Invalid move");
 })
 
 export {}

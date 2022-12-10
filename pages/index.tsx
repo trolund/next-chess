@@ -41,10 +41,12 @@ function Home(props: HomeProps): JSX.Element {
 
   const [disableUserInput, setDisableUserInput] = useState<boolean>(false)
 
+  const getAgent = () => chess.isWhite(gameState) ? players[0] : players[1]
+
   useEffect(() => {
     // doing the moves
     if(gameStarted){
-      const agent = chess.isWhite(gameState) ? players[0] : players[1]
+      const agent = getAgent()
   
       // if agent is not null and therefore is a AI input must be looked for the user
       if(!agent){ // null user most do move
