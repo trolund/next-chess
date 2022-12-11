@@ -1,13 +1,25 @@
 import { chess } from "../game/game";
 import { action, AIRes, gameState, piece, team } from "../game/types/game-types"
+import { Agent } from "./Agent";
 
-module MinmaxAgent {
+export class MinmaxAgent extends Agent {
 
-    function evaluate(state: gameState): number {
+    private depth: number = 3
+
+    constructor(depth: number = 3) {
+        super()
+        this.depth = depth
+    }
+
+    public FindMove(state: gameState): action {
+        return this.miniMax(state, this.depth)
+    }
+
+    evaluate(state: gameState): number {
         return state.board.reduce((acc, row) => {
             const rowAcc = row.reduce((rowAcc, f) => {
                 if(f.team === state.turn && f.piece !== null){
-                    return rowAcc + pointMapper(f.piece)
+                    return rowAcc + this.pointMapper(f.piece)
                 }
                 return rowAcc
             }, 0)
@@ -15,7 +27,7 @@ module MinmaxAgent {
          }, 0);
     }
 
-    function pointMapper(piece: piece): number {
+    pointMapper(piece: piece): number {
         switch(piece){
             case "king": 
                 return 5
@@ -34,20 +46,24 @@ module MinmaxAgent {
         }
     }
 
-    function getActions(state: gameState): action[] {
+    getActions(state: gameState): action[] {
         return chess.allValidMoves(state)
     }
 
-    export function miniMax(state: gameState, depth: number = 3): action {
+    miniMax(state: gameState, depth: number = 3): action {
         const utilities: AIRes[] = []
 
-        for (const action of getActions(state)) {
-            const newState = chess.move(action.from, action.to, state)
+        for (const action of this.getActions(state)) {
+            try{
+                const newState = chess.move(action.from, action.to, state)
 
-            if(newState.turn === "white") {
-                utilities.push({ score: minValue(newState, depth), action})
-            }else {
-                utilities.push({ score: maxValue(newState, depth), action})
+                if(newState.turn === "white") {
+                    utilities.push({ score: this.minValue(newState, depth), action})
+                }else {
+                    utilities.push({ score: this.maxValue(newState, depth), action})
+                }
+            }catch {
+                console.log(action);               
             }
         }
 
@@ -68,50 +84,50 @@ module MinmaxAgent {
         return finalAction.action
     }
 
-    function maxValue(state: gameState, depth: number = 3) {
+    maxValue(state: gameState, depth: number = 3) {
 
-        if (terminalTest(state) || depth == 0) {
-            return evaluate(state)
+        if (this.terminalTest(state) || depth == 0) {
+            return this.evaluate(state)
         }
 
         let v = -Infinity
 
-        for (const a of getActions(state)) {
-            const newState = chess.move(a.from, a.to, state)
+        for (const a of this.getActions(state)) {
+            const newState = chess.move(a.from, a.to, state, {transformation: "queen"})
 
             if (newState.turn === "white"){ // human turn
-                v = Math.max(v, minValue(newState, depth - 1))
+                v = Math.max(v, this.minValue(newState, depth - 1))
             }else {
-                v = Math.max(v, maxValue(newState, depth - 1))
+                v = Math.max(v, this.maxValue(newState, depth - 1))
             }
             
         }
         return v        
     }
 
-    function minValue(state: gameState, depth: number = 3) {
+    minValue(state: gameState, depth: number = 3) {
 
-        if (terminalTest(state) || depth == 0) {
-            return evaluate(state)
+        if (this.terminalTest(state) || depth == 0) {
+            return this.evaluate(state)
         }
 
         let v = Infinity
 
-        for (const a of getActions(state)) {
+        for (const a of this.getActions(state)) {
             const newState = chess.move(a.from, a.to, state)
 
             if (newState.turn === "white"){ // human turn
-                v = Math.max(v, maxValue(newState, depth - 1))
+                v = Math.max(v, this.maxValue(newState, depth - 1))
             }else {
-                v = Math.max(v, minValue(newState, depth - 1))
+                v = Math.max(v, this.minValue(newState, depth - 1))
             }
             
         }
         return v        
     }
 
-}
+    terminalTest(state: gameState): boolean {
+        return chess.checkmate(state)
+    }
 
-function terminalTest(state: gameState): boolean {
-    return chess.checkmate(state)
 }

@@ -315,6 +315,11 @@ export module chess {
 
     const changeTeam = (turn: team): team => turn === "white" ? "black" : "white"
 
+    // Stalemate is a kind of draw that happens when one side has NO legal moves to make.
+    export function Stalemate(state: gameState): boolean {
+        return state.board.flat().some(f => f.team === state.turn && validMovesFrom(f.pos, state).length > 0)
+    }
+
     // https://simple.wikipedia.org/wiki/Check_and_checkmate
     // filter pawns moves right in front if it out. (den kan ikke tage en modtander ved at gå frem)
     // led brikkerne tage deres egne med-spillere

@@ -18,7 +18,7 @@ it('move piece', () => {
 
 it('invalid move will throw', () => {
   expect(() => {
-    const newState = chess.move(chess.toPos("D2"), chess.toPos("C3"), state) // invalid move for pawn
+    chess.move(chess.toPos("D2"), chess.toPos("C3"), state) // invalid move for pawn
   }).toThrow("Invalid move");
 })
 

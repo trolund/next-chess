@@ -8,7 +8,8 @@ import { action, field, gameState, piece, pos, team } from '../game/types/game-t
 import TestLoader from '../components/testLoader'
 import TransformationModal from '../components/transformationModal'
 import { useRouter } from 'next/router'
-import { Agent, MinmaxAgent } from '../AI/Agent'
+import { Agent } from '../AI/Agent'
+import { MinmaxAgent } from '../AI/MinmaxAgent'
 
 
 interface HomeProps {
@@ -76,7 +77,7 @@ function Home(props: HomeProps): JSX.Element {
 
   const mapAgent = (agentType: string) => {
       if(agentType === "Human player") return null
-      else return new MinmaxAgent(5)
+      else return new MinmaxAgent(2)
   }
 
   const setState = (s: gameState) => {

@@ -3,8 +3,9 @@ import { chess } from "../game/game"
 import { gameState } from "../game/types/game-types";
 import { testUtil } from "./utils/testUtil";
 import { colOptions } from "../game/col-options";
-import { Agent, MinmaxAgent } from "../AI/Agent";
+import { Agent } from "../AI/Agent";
 import { Timer } from "./timer";
+import { MinmaxAgent } from "../AI/MinmaxAgent";
 
 let state: gameState
 
