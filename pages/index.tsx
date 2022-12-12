@@ -71,13 +71,13 @@ function Home(props: HomeProps): JSX.Element {
       throw "only 2 players are allowed"
     }
     const p = players
-    p[playerNum] = mapAgent(event.target.value)
+    p[playerNum] = mapAgent(event.target.value, playerNum === 0 ? "white" : "black")
     setPlayers(p)
   }
 
-  const mapAgent = (agentType: string) => {
+  const mapAgent = (agentType: string, team: team) => {
       if(agentType === "Human player") return null
-      else return new MinmaxAgent(2)
+      else return new MinmaxAgent(2, team)
   }
 
   const setState = (s: gameState) => {

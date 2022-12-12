@@ -51,7 +51,7 @@ it('pwan move rules, pwan atack - case 1', () => {
 
 it('pwan transformation should fail becuse of missing option', () => {
   const state = loadTestCase(14)!
-  expect(state).not.toBeNull()
+  expect(state).not.toBeNull() 
   const A2 = testUtil.posArrayToNotationArray(chess.validMovesFrom("A2", state).sort())     
   expect(A2).toStrictEqual(["A1"])
     expect(() => chess.move("F2", "F1", state)).toThrow()

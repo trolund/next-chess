@@ -5,10 +5,12 @@ import { Agent } from "./Agent";
 export class MinmaxAgent extends Agent {
 
     private depth: number = 3
+    private team: team = "white"
 
-    constructor(depth: number = 3) {
+    constructor(depth: number = 3, team: team) {
         super()
         this.depth = depth
+        this.team = team
     }
 
     public FindMove(state: gameState): action {
@@ -57,7 +59,7 @@ export class MinmaxAgent extends Agent {
             try{
                 const newState = chess.move(action.from, action.to, state)
 
-                if(newState.turn === "white") {
+                if(newState.turn !== this.team) {
                     utilities.push({ score: this.minValue(newState, depth), action})
                 }else {
                     utilities.push({ score: this.maxValue(newState, depth), action})
@@ -95,7 +97,7 @@ export class MinmaxAgent extends Agent {
         for (const a of this.getActions(state)) {
             const newState = chess.move(a.from, a.to, state, {transformation: "queen"})
 
-            if (newState.turn === "white"){ // human turn
+            if (newState.turn !== this.team){ // human turn
                 v = Math.max(v, this.minValue(newState, depth - 1))
             }else {
                 v = Math.max(v, this.maxValue(newState, depth - 1))
