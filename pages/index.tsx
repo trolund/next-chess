@@ -46,7 +46,7 @@ function Home(props: HomeProps): JSX.Element {
 
   useEffect(() => {
     // doing the moves
-    if(gameStarted && !chess.gameEnded(gameState)){
+    if(gameStarted && !gameState.ended){
       const agent = getAgent()
   
       // if agent is not null and therefore is a AI input must be looked for the user
@@ -84,7 +84,8 @@ function Home(props: HomeProps): JSX.Element {
     setGameState({
       board: [...s.board],
       piecesTaken: [...s.piecesTaken],
-      turn: s.turn
+      turn: s.turn,
+      ended: false
     })
   }
 

@@ -35,6 +35,7 @@
         board: board;
         piecesTaken: field[];
         turn: team;
+        ended: boolean;
     }
 
     export type AIRes = {score: number, action: action}

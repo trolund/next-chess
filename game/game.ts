@@ -2,7 +2,7 @@ import { emptyBoard } from "../stores/emptyBoard"
 import { testUtil } from "../test/utils/testUtil"
 import { colOptions } from "./col-options"
 import { bishop, king, knight, pawn, pawnAttack, queen, rook } from "./move-validator"
-import { action, board, chessPos, field, gameState, moveOptions, piece, pos, team } from "./types/game-types"
+import { action, board, chessPos, field, gameState, moveOptions, piece, pos, team } from './types/game-types';
 import _ from "lodash"
 
 export module chess {
@@ -39,7 +39,7 @@ export module chess {
                 return { piece: "pawn", color: getBoardColor(row, col), team: "white", pos }
             }
 
-            return { piece: null, color: getBoardColor(row, col), team: null, pos }
+            return { piece: null, color: getBoardColor(row, col), team: null, pos } 
         }
 
         const board: field[][] = []
@@ -57,7 +57,7 @@ export module chess {
     }
 
     export const createGame = (): gameState => {
-        return { board: createNewBoard(), piecesTaken: [], turn: "white" }
+        return { board: createNewBoard(), piecesTaken: [], turn: "white", ended: false }
     }
 
     export const rotateBoard = (state: gameState): gameState => {
@@ -128,7 +128,14 @@ export module chess {
         // change too the other players turn
         newState.turn = changeTeam(newState.turn)
 
+        // check if game have ended
+        newState.ended = gameEnded(newState)
+
         return newState
+    }
+
+    export function allValidMovesAsPos(state: gameState, attack: boolean = false, checkValidity: boolean = true){
+        return onlyToPos(actionsCleanUp(allValidMoves(state, attack, checkValidity)))
     }
 
     export const allValidMoves = (state: gameState, attack: boolean = false, checkValidity: boolean = true): action[] => {
@@ -321,27 +328,38 @@ export module chess {
 
     // Stalemate is a kind of draw that happens when one side has NO legal moves to make.
     export function stalemate(state: gameState): boolean {
-        return state.board.flat().some(f => f.team === state.turn && validMovesFrom(f.pos, state).length < 0)
+        return state.board.flat().some(f => f.team === state.turn && f.pos && validMovesFrom(f.pos, state).length < 0)
     }
 
     // https://simple.wikipedia.org/wiki/Check_and_checkmate
     // filter pawns moves right in front if it out. (den kan ikke tage en modtander ved at gå frem)
     // led brikkerne tage deres egne med-spillere
     // TODO
+    // Can I move out of mate?
+    // Can I block mate?
+    // Can I take the attacker?
     export function checkmate(state: gameState): boolean {
         const board: board = state.board
         const team: team = changeTeam(state.turn)
-        const king: field = board.flat().filter(f => f.piece === "king")[0]        
+        const king: field = board.flat().filter(f => f.piece === "king")[0]   
+        
+        if(!king) return true // no king the game most be over!!!!
 
         const kingsMoves = onlyToPos(actionsCleanUp(validMovesFrom(king.pos, {...state, turn: king.team}).map(to => ({from: king.pos, to } as action), true)))
-        const validMoves = onlyToPos(actionsCleanUp(allValidMoves({...state, turn: team}, true)))
-        
-        // console.log("kings moves: ", kingsMoves)
-        // console.log("valid moves: ", validMoves)
+        const validMoves = allValidMovesAsPos({...state, turn: team}, true)
 
-        if(kingsMoves.length === 0) return check(state)
+        // if(kingsMoves.length === 0) return check(state)
 
-        return !kingsMoves.some(km => !validMoves.includes(km))
+        return !kingsMoves.some(km => !validMoves.includes(km)) // Can I move out of mate? do there exsit a move that does not make make the king under atack
+            || !validMoves.some(km => !kingsMoves.includes(km))
+    }
+
+    export function isUnderAttack(state: gameState, pos: pos): boolean {
+        return allValidMovesAsPos({...state, turn: changeTeam(state.turn)}, true).some(m => comparePos(m, pos))
+    }
+
+    export function comparePos(a: pos | chessPos, b: pos | chessPos): boolean{
+        return toPosSafe(a) === toPosSafe(b)
     }
 
     export function check(state: gameState, checkValidity: boolean = true): boolean {

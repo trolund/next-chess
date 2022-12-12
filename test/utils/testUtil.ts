@@ -111,7 +111,7 @@ export module testUtil {
             throw "test board is not the correct size!"
         }
 
-        return { board: createNewBoardFromSimpleBoard(sb), piecesTaken, turn }
+        return { board: createNewBoardFromSimpleBoard(sb), piecesTaken, turn, ended: false }
     }
 
     export const printBoard = (sb: board) => {

@@ -4,8 +4,8 @@ import { testUtil } from './testUtil'
 
 const testFolder = `${process.cwd()}/test/data/`
 
-const loadTestCase = (num: number): gameState | null=> {   
-  try { 
+const loadTestCase = (num: number | string): gameState | null=> {   
+  try {
     const data: string = fs.readFileSync(`${process.cwd()}/test/data/case-${num}.json`, 'utf8')
     const c: testCase = JSON.parse(data)     
     return testUtil.createTestGame(c.board, c.turn)
@@ -16,7 +16,7 @@ const loadTestCase = (num: number): gameState | null=> {
 
 const loadTestCaseWithName = (fileName: string): gameState | null => {    
   try {
-    const data: string = fs.readFileSync(`${process.cwd()}/test/data/${fileName}`, { encoding: 'utf8', flag: "r" })
+    const data: string = fs.readFileSync(`${process.cwd()}/test/data/${fileName}.json`, { encoding: 'utf8', flag: "r" })
     const c: testCase = JSON.parse(data)    
     return testUtil.createTestGame(c.board, c.turn)
   } catch (e) {

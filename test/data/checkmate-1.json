@@ -1,0 +1,13 @@
+{
+    "name": "checkmate - Fool's Mate",
+    "comment": "Fool's Mate, https://thechessworld.com/articles/training-techniques/13-checkmates-you-must-know/",
+    "turn": "white", 
+    "board":[["R", "N", "B", "#", "K", "B", "N", "R"],
+             ["P", "P", "P", "P", "#", "P", "P", "p"],
+             ["#", "#", "#", "#", "#", "#", "#", "#"],
+             ["#", "#", "#", "#", "P", "#", "#", "#"],
+             ["#", "#", "#", "#", "#", "#", "p", "Q"],
+             ["#", "#", "#", "#", "#", "p", "#", "#"],
+             ["p", "p", "p", "p", "p", "#", "#", "p"],
+             ["r", "n", "b", "q", "k", "b", "n", "r"]]
+}
