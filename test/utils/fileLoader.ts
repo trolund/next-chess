@@ -10,16 +10,18 @@ const loadTestCase = (num: number | string): gameState | null=> {
     const c: testCase = JSON.parse(data)     
     return testUtil.createTestGame(c.board, c.turn)
   } catch (e) {
+    console.log(e)
     return null
   }
 }
 
 const loadTestCaseWithName = (fileName: string): gameState | null => {    
   try {
-    const data: string = fs.readFileSync(`${process.cwd()}/test/data/${fileName}.json`, { encoding: 'utf8', flag: "r" })
+    const data: string = fs.readFileSync(`${process.cwd()}/test/data/${fileName}`, { encoding: 'utf8', flag: "r" })
     const c: testCase = JSON.parse(data)    
     return testUtil.createTestGame(c.board, c.turn)
   } catch (e) {
+    console.log(e)
     return null
   }
 }
