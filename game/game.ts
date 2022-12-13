@@ -348,7 +348,7 @@ export module chess {
         const kingsMoves = onlyToPos(actionsCleanUp(validMovesFrom(king.pos, {...state, turn: king.team}).map(to => ({from: king.pos, to } as action), true)))
         const validMoves = allValidMovesAsPos({...state, turn: team}, true)
 
-        // if(kingsMoves.length === 0) return check(state)
+        if(kingsMoves.length === 0) return check(state)
 
         return !kingsMoves.some(km => !validMoves.includes(km)) // Can I move out of mate? do there exsit a move that does not make make the king under atack
             || !validMoves.some(km => !kingsMoves.includes(km))

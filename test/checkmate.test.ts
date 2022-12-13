@@ -13,6 +13,12 @@ it('checkmate 4', () => {
   expect(chess.checkmate(state)).toBe(true)
 })
 
+it('checkmate 5', () => {
+  const state = loadTestCaseWithName("checkmate-3")!
+  expect(state).not.toBeNull()
+  expect(chess.checkmate(state)).toBe(true)
+})
+
 it('checkmate 2', () => {
   const state = loadTestCase(9)!
   expect(state).not.toBeNull()
