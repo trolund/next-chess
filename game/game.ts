@@ -340,18 +340,16 @@ export module chess {
     // Can I take the attacker?
     export function checkmate(state: gameState): boolean {
         const board: board = state.board
-        const team: team = changeTeam(state.turn)
         const king: field = board.flat().filter(f => f.piece === "king")[0]   
         
         if(!king) return true // no king the game most be over!!!!
 
         const kingsMoves = onlyToPos(actionsCleanUp(validMovesFrom(king.pos, {...state, turn: king.team}).map(to => ({from: king.pos, to } as action), true)))
-        const validMoves = allValidMovesAsPos({...state, turn: team}, true)
+        const validMoves = allValidMovesAsPos({...state, turn: changeTeam(state.turn)}, true)
 
         if(kingsMoves.length === 0) return check(state)
 
-        return !kingsMoves.some(km => !validMoves.includes(km)) // Can I move out of mate? do there exsit a move that does not make make the king under atack
-            || !validMoves.some(km => !kingsMoves.includes(km))
+        return !kingsMoves.some(km => !validMoves.includes(km)) // Can I move out of mate? do there exist a move that does not make make the king under attack
     }
 
     export function isUnderAttack(state: gameState, pos: pos): boolean {
