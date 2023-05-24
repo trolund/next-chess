@@ -91,7 +91,9 @@ export module chess {
         const to = board[toPos.row][toPos.col]
 
         // make sure that a pwan transformation have the transformation input
-        if(canTransform(from, toPos) && !moveOptions?.transformation) throw new Error("The move most include what type of pice the should transform into")
+        if(canTransform(from, toPos) && !moveOptions?.transformation) {
+            throw new Error("The move most include what type of pice the should transform into")
+        }
 
         // fail if no piece is present 
         if (from.piece === null) throw new Error("There is no piece to move on position " + formatPos(fromPos))
@@ -131,6 +133,7 @@ export module chess {
         // check if game have ended
         newState.ended = gameEnded(newState)
 
+        console.table(newState)
         return newState
     }
 
@@ -139,23 +142,27 @@ export module chess {
     }
 
     export const allValidMoves = (state: gameState, attack: boolean = false, checkValidity: boolean = true): action[] => {
-        const turn = state.turn
-        const board = state.board
-        const validMoves: action[] = []
+        try {
+            const turn = state.turn
+            const board = state.board
+            const validMoves: action[] = []
 
-        for (let i = 0; i < board.length; i++) {
-            for (let j = 0; j < board[i].length; j++) {
-                const field = board[i][j]
-                if(field.team === turn){
-                    const movesFromField = validMovesFrom(field.pos, state, attack, checkValidity)
-                    movesFromField.forEach(m => {
-                        validMoves.push({ from: field.pos, to: m })
-                    })
+            for (let i = 0; i < board.length; i++) {
+                for (let j = 0; j < board[i].length; j++) {
+                    const field = board[i][j]
+                    if(field.team === turn){
+                        const movesFromField = validMovesFrom(field.pos, state, attack, checkValidity)
+                        movesFromField.forEach(m => {
+                            validMoves.push({ from: field.pos, to: m })
+                        })
+                    }
                 }
             }
-        }
 
-        return validMoves
+            return validMoves
+        } catch (e) {
+            throw new Error("error in allValidMoves: " + e)
+        }
     }
 
     export const validMovesFrom = (fromPos: pos | string, state: gameState, attack: boolean = false, checkValidity: boolean = true): pos[] => {
@@ -187,56 +194,64 @@ export module chess {
     }
 
     export const allReachableMoves = (state: gameState): action[] => {
-        const turn = state.turn
-        const board = state.board
-        const validMoves: action[] = []
+        try {
+            const turn = state.turn
+            const board = state.board
+            const validMoves: action[] = []
 
-        for (let i = 0; i < board.length; i++) {
-            for (let j = 0; j < board[i].length; j++) {
-                const field = board[i][j]
-                if(field.team === turn){
-                    const movesFromField = reachableFrom(field.pos, state)
-                    movesFromField.forEach(m => {
-                        validMoves.push({ from: field.pos, to: m } as action)
-                    })
+            for (let i = 0; i < board.length; i++) {
+                for (let j = 0; j < board[i].length; j++) {
+                    const field = board[i][j]
+                    if(field.team === turn){
+                        if (!field["pos"]) console.log("allReachableMoves", field)
+                        const movesFromField = reachableFrom(field.pos, state)
+                        movesFromField.forEach(m => {
+                            validMoves.push({ from: field.pos, to: m } as action)
+                        })
+                    }
                 }
             }
-        }
 
-        return validMoves
+            return validMoves
+        } catch (e) {
+            throw new Error("error in allReachableMoves: " + e)
+        }
     }
 
     export const reachableFrom = (from: pos | string, state: gameState): pos[] => {
+        try {
+            const piece = getFieldAtPos(typeof from === "string" ? toPos(from): from, state)
+            const cleanState = testUtil.createTestGame(emptyBoard, state.turn)
+            if (!piece["pos"]) console.log("reachableFrom", piece)
+            cleanState.board[piece.pos.row][piece.pos.col] = piece
 
-        const piece = getFieldAtPos(typeof from === "string" ? toPos(from): from, state)
-        const cleanState = testUtil.createTestGame(emptyBoard, state.turn)
+            let fromPosParsed: pos;
 
-        cleanState.board[piece.pos.row][piece.pos.col] = piece
+            if (!from || !state) {
+                return []
+            }
 
-        let fromPosParsed: pos;
+            if(typeof from === "string"){
+                fromPosParsed = toPos(from)            
+            }else {
+                fromPosParsed = from;
+            }
 
-        if (!from || !state) {
-            return []
+            const validMoves: pos[] = [];
+
+            cleanState.board.forEach((row, i) => {
+                row.forEach((field, j) => {
+                    const pos: pos = { row: i, col: j };
+                    if (isValidMove(fromPosParsed, pos, cleanState, true)) {
+                        validMoves.push(pos)
+                    }
+                })
+            });
+
+            return validMoves;
+        } catch (e) {
+            throw new Error("error in reachableFrom: " + e)
         }
-
-        if(typeof from === "string"){
-            fromPosParsed = toPos(from)            
-        }else {
-            fromPosParsed = from;
-        }
-
-        const validMoves: pos[] = [];
-
-        cleanState.board.forEach((row, i) => {
-            row.forEach((field, j) => {
-                const pos: pos = { row: i, col: j };
-                if (isValidMove(fromPosParsed, pos, cleanState, true)) {
-                    validMoves.push(pos)
-                }
-            })
-        });
-
-        return validMoves;
     }
 
     export const getFieldAtPos = (pos: pos | chessPos, state: gameState): field => {
@@ -328,7 +343,11 @@ export module chess {
 
     // Stalemate is a kind of draw that happens when one side has NO legal moves to make.
     export function stalemate(state: gameState): boolean {
-        return state.board.flat().some(f => f.team === state.turn && f.pos && validMovesFrom(f.pos, state).length < 0)
+        try {
+            return state.board.flat().some(f => f.team === state.turn && f.pos && validMovesFrom(f.pos, state).length < 0)
+        }catch(e){
+            throw new Error("error in stalemate: " + e)
+        }
     }
 
     // https://simple.wikipedia.org/wiki/Check_and_checkmate
@@ -338,6 +357,7 @@ export module chess {
     // Can I move out of mate?
     // Can I block mate?
     // Can I take the attacker?
+    // checkmate 
     export function checkmate(state: gameState): boolean {
         const board: board = state.board
         const king: field = board.flat().filter(f => f.piece === "king")[0]   
@@ -361,13 +381,20 @@ export module chess {
     }
 
     export function check(state: gameState, checkValidity: boolean = true): boolean {
-        const board: board = state.board
-        const team: team = changeTeam(state.turn)
-        const king: field = board.flat().filter(f => f.piece === "king" && f.team === state.turn)[0]   
-        const kingPos = notation(king.pos)     
+        try {
+            const board: board = state.board
+            const team: team = changeTeam(state.turn)
+            const king: field = board.flat().filter(f => f.piece === "king" && f.team === state.turn)[0]   
 
-        const validMoves = onlyToPos(actionsCleanUp(allValidMoves({...state, turn: team}, true, checkValidity)))
-        return validMoves.some(m => m === kingPos)
+            if(!king) throw new Error("No king found")
+
+            const kingPos = notation(king.pos)     
+
+            const validMoves = onlyToPos(actionsCleanUp(allValidMoves({...state, turn: team}, true, checkValidity)))
+            return validMoves.some(m => m === kingPos)
+        }catch(e){
+            throw new Error("error in check: " + e)
+        }
     }
 
     export function isWhite(state: gameState): boolean{
