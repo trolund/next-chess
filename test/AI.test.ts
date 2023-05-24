@@ -3,7 +3,7 @@ import { chess } from "../game/game"
 import { gameState } from "../game/types/game-types";
 import { testUtil } from "./utils/testUtil";
 import { colOptions } from "../game/col-options";
-import { Agent } from "../AI/Agent";
+import { Agent } from "../AI/agent";
 import { Timer } from "./timer";
 import { MinmaxAgent } from "../AI/MinmaxAgent";
 

@@ -8,7 +8,7 @@ import { action, field, gameState, piece, pos, team } from '../game/types/game-t
 import TestLoader from '../components/testLoader'
 import TransformationModal from '../components/transformationModal'
 import { useRouter } from 'next/router'
-import { Agent } from '../AI/Agent'
+import { Agent } from '../AI/agent'
 import { MinmaxAgent } from '../AI/MinmaxAgent'
 
 
@@ -45,6 +45,7 @@ function Home(props: HomeProps): JSX.Element {
   const getAgent = () => chess.isWhite(gameState) ? players[0] : players[1]
 
   useEffect(() => {
+    console.log("🎮 Game started: " + gameStarted);
     // doing the moves
     if(gameStarted && !gameState.ended){
       const agent = getAgent()
