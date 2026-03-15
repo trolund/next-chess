@@ -22,6 +22,7 @@ interface HomeProps {
 const playerTypes = ["Minimax", "Alpha-Beta", "Ordered Alpha-Beta", "Human player"]
 const depthOptions = [1, 2, 3, 4]
 const playerSettingsStorageKey = "next-chess-player-settings"
+const leaderboardStorageKey = "next-chess-leaderboard"
 
 type LogEntry = {
   id: number
@@ -38,6 +39,19 @@ type LogEntry = {
 type PlayerConfig = {
   kind: string
   depth: number
+}
+
+type LeaderboardEntry = {
+  id: string
+  label: string
+  isAI: boolean
+  rating: number
+  games: number
+  wins: number
+  losses: number
+  draws: number
+  totalThinkMs: number
+  totalMoves: number
 }
 
 function Home(props: HomeProps): JSX.Element {
@@ -66,12 +80,16 @@ function Home(props: HomeProps): JSX.Element {
   ])
   const [gameStarted, setGameStarted] = useState<boolean>(false)
   const [moveAnimationId, setMoveAnimationId] = useState<number>(0)
+  const [showLeaderboardModal, setShowLeaderboardModal] = useState<boolean>(false)
   const [aiLog, setAiLog] = useState<LogEntry[]>([])
   const [whiteThinkMs, setWhiteThinkMs] = useState<number>(0)
   const [blackThinkMs, setBlackThinkMs] = useState<number>(0)
   const [totalElapsedMs, setTotalElapsedMs] = useState<number>(0)
   const [whiteActiveMs, setWhiteActiveMs] = useState<number>(0)
   const [blackActiveMs, setBlackActiveMs] = useState<number>(0)
+  const [whiteAIMoveCount, setWhiteAIMoveCount] = useState<number>(0)
+  const [blackAIMoveCount, setBlackAIMoveCount] = useState<number>(0)
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
 
   const [disableUserInput, setDisableUserInput] = useState<boolean>(false)
   const stopWatchStart = useRef<number | null>(null)
@@ -79,12 +97,101 @@ function Home(props: HomeProps): JSX.Element {
   const whiteTurnStart = useRef<number | null>(null)
   const blackTurnStart = useRef<number | null>(null)
   const logIdRef = useRef<number>(0)
+  const recordedMatchKey = useRef<string | null>(null)
 
   const getAgent = () => chess.isWhite(gameState) ? players[0] : players[1]
 
   const appendLog = (entry: Omit<LogEntry, 'id'>) => {
     logIdRef.current += 1
     setAiLog(prev => [{ id: logIdRef.current, ...entry }, ...prev].slice(0, 12))
+  }
+
+  const profileId = (config: PlayerConfig, teamLabel: "White" | "Black") => {
+    if (config.kind === "empty") {
+      return `${teamLabel}-unconfigured`
+    }
+
+    if (config.kind === "Human player") {
+      return "human-player"
+    }
+
+    return `${config.kind.toLowerCase().replace(/\s+/g, "-")}-d${config.depth}`
+  }
+
+  const profileLabel = (config: PlayerConfig) => {
+    if (config.kind === "empty") return "Not configured"
+    if (config.kind === "Human player") return "Human player"
+    return `${config.kind} D${config.depth}`
+  }
+
+  const ensureEntry = (entries: LeaderboardEntry[], config: PlayerConfig, side: "White" | "Black"): LeaderboardEntry => {
+    const id = profileId(config, side)
+    const existing = entries.find(entry => entry.id === id)
+    if (existing) {
+      return existing
+    }
+
+    const created: LeaderboardEntry = {
+      id,
+      label: profileLabel(config),
+      isAI: config.kind !== "Human player" && config.kind !== "empty",
+      rating: 1200,
+      games: 0,
+      wins: 0,
+      losses: 0,
+      draws: 0,
+      totalThinkMs: 0,
+      totalMoves: 0
+    }
+
+    entries.push(created)
+    return created
+  }
+
+  const expectedScore = (ratingA: number, ratingB: number) => 1 / (1 + Math.pow(10, (ratingB - ratingA) / 400))
+
+  const applyMatchToLeaderboard = () => {
+    setLeaderboard(prev => {
+      const next = prev.map(entry => ({ ...entry }))
+      const whiteEntry = ensureEntry(next, playerConfigs[0], "White")
+      const blackEntry = ensureEntry(next, playerConfigs[1], "Black")
+
+      const whiteIsWinner = gameState.winner === "white"
+      const blackIsWinner = gameState.winner === "black"
+      const isDraw = gameState.winner === null
+
+      whiteEntry.games += 1
+      blackEntry.games += 1
+
+      if (isDraw) {
+        whiteEntry.draws += 1
+        blackEntry.draws += 1
+      } else if (whiteIsWinner) {
+        whiteEntry.wins += 1
+        blackEntry.losses += 1
+      } else if (blackIsWinner) {
+        blackEntry.wins += 1
+        whiteEntry.losses += 1
+      }
+
+      whiteEntry.totalThinkMs += whiteThinkMs
+      blackEntry.totalThinkMs += blackThinkMs
+      whiteEntry.totalMoves += whiteAIMoveCount
+      blackEntry.totalMoves += blackAIMoveCount
+
+      if (whiteEntry.id !== blackEntry.id) {
+        const whiteExpected = expectedScore(whiteEntry.rating, blackEntry.rating)
+        const blackExpected = expectedScore(blackEntry.rating, whiteEntry.rating)
+        const whiteScore = isDraw ? 0.5 : whiteIsWinner ? 1 : 0
+        const blackScore = isDraw ? 0.5 : blackIsWinner ? 1 : 0
+        const kFactor = 24
+
+        whiteEntry.rating = Math.round(whiteEntry.rating + kFactor * (whiteScore - whiteExpected))
+        blackEntry.rating = Math.round(blackEntry.rating + kFactor * (blackScore - blackExpected))
+      }
+
+      return next.sort((left, right) => right.rating - left.rating || right.wins - left.wins || left.losses - right.losses)
+    })
   }
 
   useEffect(() => {
@@ -113,8 +220,17 @@ function Home(props: HomeProps): JSX.Element {
         mapAgent(validSettings[0], "white"),
         mapAgent(validSettings[1], "black")
       ])
+
+      const storedLeaderboard = window.localStorage.getItem(leaderboardStorageKey)
+      if (storedLeaderboard) {
+        const parsedBoard = JSON.parse(storedLeaderboard) as LeaderboardEntry[]
+        if (Array.isArray(parsedBoard)) {
+          setLeaderboard(parsedBoard)
+        }
+      }
     } catch (_error) {
       window.localStorage.removeItem(playerSettingsStorageKey)
+      window.localStorage.removeItem(leaderboardStorageKey)
     }
   }, [])
 
@@ -125,6 +241,14 @@ function Home(props: HomeProps): JSX.Element {
 
     window.localStorage.setItem(playerSettingsStorageKey, JSON.stringify(playerConfigs))
   }, [playerConfigs])
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    window.localStorage.setItem(leaderboardStorageKey, JSON.stringify(leaderboard))
+  }, [leaderboard])
 
   useEffect(() => {
     console.log("🎮 Game started: " + gameStarted);
@@ -175,8 +299,10 @@ function Home(props: HomeProps): JSX.Element {
 
     if (actingTeam === "white") {
       setWhiteThinkMs(prev => prev + duration)
+      setWhiteAIMoveCount(prev => prev + 1)
     } else {
       setBlackThinkMs(prev => prev + duration)
+      setBlackAIMoveCount(prev => prev + 1)
     }
 
     doMove(chess.toPosSafe(move.from), chess.toPosSafe(move.to), "queen") // TODO: just always choses queen for now 
@@ -228,10 +354,13 @@ function Home(props: HomeProps): JSX.Element {
     setTotalElapsedMs(0)
     setWhiteActiveMs(0)
     setBlackActiveMs(0)
+    setWhiteAIMoveCount(0)
+    setBlackAIMoveCount(0)
     stopWatchStart.current = null
     stopWatchEnd.current = null
     whiteTurnStart.current = null
     blackTurnStart.current = null
+    recordedMatchKey.current = null
     const resetConfigs = [
       { kind: "empty", depth: 2 },
       { kind: "empty", depth: 2 }
@@ -360,6 +489,20 @@ function Home(props: HomeProps): JSX.Element {
   }, [gameStarted, gameState.ended])
 
   useEffect(() => {
+    if (!gameStarted || !gameState.ended) {
+      return
+    }
+
+    const matchKey = `${gameState.result}-${gameState.winner}-${gameState.lastMove ? JSON.stringify(gameState.lastMove) : "no-move"}`
+    if (recordedMatchKey.current === matchKey) {
+      return
+    }
+
+    recordedMatchKey.current = matchKey
+    applyMatchToLeaderboard()
+  }, [gameStarted, gameState.ended, gameState.result, gameState.winner, gameState.lastMove, whiteThinkMs, blackThinkMs, whiteAIMoveCount, blackAIMoveCount])
+
+  useEffect(() => {
     if (!gameStarted || gameState.ended) {
       whiteTurnStart.current = null
       blackTurnStart.current = null
@@ -447,6 +590,12 @@ function Home(props: HomeProps): JSX.Element {
     </div>
   )
 
+  const rankedLeaderboard = useMemo(() => leaderboard.map((entry, index) => ({ ...entry, rank: index + 1 })), [leaderboard])
+  const aiLeaderboard = useMemo(() => rankedLeaderboard.filter(entry => entry.isAI), [rankedLeaderboard])
+
+  const formatAverageMoveMs = (entry: LeaderboardEntry) => entry.totalMoves > 0 ? `${Math.round(entry.totalThinkMs / entry.totalMoves)} ms/move` : "No AI moves"
+  const formatWinRate = (entry: LeaderboardEntry) => entry.games > 0 ? `${Math.round((entry.wins / entry.games) * 100)}% win rate` : "No games"
+
   return (
     <div className={styles.container}>
       <Head>
@@ -511,6 +660,9 @@ function Home(props: HomeProps): JSX.Element {
               <div className={styles.actionRow}>
                 <button className={styles.primaryButton} onClick={() => setGameStarted(true)}>Start match</button>
                 <button className={styles.secondaryButton} onClick={resetGame}>Reset</button>
+              </div>
+              <div className={styles.actionRow}>
+                <button className={styles.secondaryButton} onClick={() => setShowLeaderboardModal(true)}>Open rankings</button>
               </div>
             </section>
           </aside>
@@ -606,8 +758,70 @@ function Home(props: HomeProps): JSX.Element {
                 ))}
               </div>
             </section>
+
           </aside>
         </div>
+        {showLeaderboardModal && (
+          <div className={styles.rankingsOverlay} onClick={() => setShowLeaderboardModal(false)}>
+            <div className={styles.rankingsModal} onClick={(event) => event.stopPropagation()}>
+              <div className={styles.rankingsHeader}>
+                <div>
+                  <p className={styles.panelLabel}>Leaderboard</p>
+                  <h3>Ranked profiles</h3>
+                </div>
+                <button className={styles.secondaryButton + " " + styles.rankingsCloseButton} onClick={() => setShowLeaderboardModal(false)}>Close</button>
+              </div>
+
+              <div className={styles.rankingsGrid}>
+                <section className={styles.panelCard}>
+                  <p className={styles.panelLabel}>Overall</p>
+                  <h3>All players</h3>
+                  <div className={styles.leaderboardList}>
+                    {rankedLeaderboard.length === 0 && <p className={styles.panelMeta}>No completed matches yet.</p>}
+                    {rankedLeaderboard.map(entry => (
+                      <div key={entry.id} className={styles.leaderboardEntry}>
+                        <div>
+                          <p className={styles.leaderboardTitle}>#{entry.rank} {entry.label}</p>
+                          <p className={styles.leaderboardMeta}>{entry.games} games · {entry.wins}W {entry.draws}D {entry.losses}L</p>
+                        </div>
+                        <strong className={styles.leaderboardScore}>{entry.rating}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className={styles.panelCard}>
+                  <p className={styles.panelLabel}>AI ranking</p>
+                  <h3>Strength snapshot</h3>
+                  <div className={styles.leaderboardList}>
+                    {aiLeaderboard.length === 0 && <p className={styles.panelMeta}>No AI match data yet.</p>}
+                    {aiLeaderboard.map(entry => (
+                      <div key={`ai-${entry.id}`} className={styles.aiStatCard}>
+                        <div className={styles.leaderboardEntry}>
+                          <div>
+                            <p className={styles.leaderboardTitle}>#{entry.rank} {entry.label}</p>
+                            <p className={styles.leaderboardMeta}>{formatWinRate(entry)}</p>
+                          </div>
+                          <strong className={styles.leaderboardScore}>{entry.rating}</strong>
+                        </div>
+                        <div className={styles.aiStatGrid}>
+                          <div className={styles.aiMiniStat}>
+                            <span>Games</span>
+                            <strong>{entry.games}</strong>
+                          </div>
+                          <div className={styles.aiMiniStat}>
+                            <span>Avg speed</span>
+                            <strong>{formatAverageMoveMs(entry)}</strong>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )
