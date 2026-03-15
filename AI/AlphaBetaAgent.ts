@@ -3,9 +3,9 @@ import { action, gameState, moveOptions, piece, team } from "../game/types/game-
 import { Agent } from "./agent"
 
 /// <summary>
-/// An agent that uses the minmax algorithm to find the best move
+/// An agent that uses minimax with alpha-beta pruning
 /// </summary>
-export class MinmaxAgent extends Agent {
+export class AlphaBetaAgent extends Agent {
 
     private depth: number = 3
     private team: team = "white"
@@ -24,30 +24,34 @@ export class MinmaxAgent extends Agent {
             throw new Error("No legal moves available for " + state.turn)
         }
 
+        const maximizing = state.turn === this.team
         let bestAction = actions[0]
-        let bestScore = state.turn === this.team ? -Infinity : Infinity
+        let bestScore = maximizing ? -Infinity : Infinity
+        let alpha = -Infinity
+        let beta = Infinity
 
         for (const candidate of actions) {
             const nextState = chess.move(candidate.from, candidate.to, state, this.defaultMoveTransform)
-            const score = this.search(nextState, this.depth - 1)
+            const score = this.search(nextState, this.depth - 1, alpha, beta)
 
-            if (state.turn === this.team) {
+            if (maximizing) {
                 if (score > bestScore) {
                     bestScore = score
                     bestAction = candidate
                 }
-            } else if (score < bestScore) {
-                bestScore = score
-                bestAction = candidate
+                alpha = Math.max(alpha, bestScore)
+            } else {
+                if (score < bestScore) {
+                    bestScore = score
+                    bestAction = candidate
+                }
+                beta = Math.min(beta, bestScore)
             }
         }
 
         return bestAction
     }
 
-    /// <summary>
-    /// Evaluates the state of the game
-    /// </summary>
     evaluate(state: gameState): number {
         let score = 0
 
@@ -93,14 +97,11 @@ export class MinmaxAgent extends Agent {
         }
     }
 
-    /// <summary>
-    /// Gets all the possible actions for the agent
-    /// </summary>
     getActions(state: gameState): action[] {
         return chess.allValidMoves(state)
     }
 
-    private search(state: gameState, depth: number): number {
+    private search(state: gameState, depth: number, alpha: number, beta: number): number {
         if (depth <= 0 || this.terminalTest(state)) {
             return this.evaluate(state)
         }
@@ -114,7 +115,11 @@ export class MinmaxAgent extends Agent {
             let best = -Infinity
             for (const candidate of actions) {
                 const nextState = chess.move(candidate.from, candidate.to, state, this.defaultMoveTransform)
-                best = Math.max(best, this.search(nextState, depth - 1))
+                best = Math.max(best, this.search(nextState, depth - 1, alpha, beta))
+                alpha = Math.max(alpha, best)
+                if (beta <= alpha) {
+                    break
+                }
             }
             return best
         }
@@ -122,14 +127,15 @@ export class MinmaxAgent extends Agent {
         let best = Infinity
         for (const candidate of actions) {
             const nextState = chess.move(candidate.from, candidate.to, state, this.defaultMoveTransform)
-            best = Math.min(best, this.search(nextState, depth - 1))
+            best = Math.min(best, this.search(nextState, depth - 1, alpha, beta))
+            beta = Math.min(beta, best)
+            if (beta <= alpha) {
+                break
+            }
         }
         return best
     }
 
-    /// <summary>
-    /// Checks if the state is a terminal state
-    /// </summary>
     terminalTest(state: gameState): boolean {
         return chess.gameEnded(state) || state.ended
     }

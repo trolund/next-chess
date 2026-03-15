@@ -27,15 +27,35 @@
 
     export type action = { from: chessPos | pos, to: chessPos | pos }
 
+    export type castlingRights = {
+        white: {
+            kingSide: boolean
+            queenSide: boolean
+        }
+        black: {
+            kingSide: boolean
+            queenSide: boolean
+        }
+    }
+
     export type board = field[][]
 
     export type pos = { row: number, col: number }
+
+    export type gameResult = "checkmate" | "stalemate" | "threefold-repetition" | "fifty-move-rule" | "insufficient-material" | null
 
     export type gameState = {
         board: board;
         piecesTaken: field[];
         turn: team;
         ended: boolean;
+        castlingRights?: castlingRights;
+        enPassantTarget?: pos | null;
+        lastMove?: action | null;
+        winner?: team;
+        halfMoveClock?: number;
+        positionHistory?: string[];
+        result?: gameResult;
     }
 
     export type AIRes = {score: number, action: action}
