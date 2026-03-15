@@ -21,9 +21,17 @@ interface HomeProps {
 
 const playerTypes = ["Minimax", "Alpha-Beta", "Ordered Alpha-Beta", "Human player"]
 const depthOptions = [1, 2, 3, 4]
+const playerSettingsStorageKey = "next-chess-player-settings"
 
 type LogEntry = {
   id: number
+  team: "white" | "black"
+  kind: 'search' | 'move'
+  agent: string
+  depth?: number
+  from?: string
+  to?: string
+  durationMs?: number
   text: string
 }
 
@@ -74,10 +82,49 @@ function Home(props: HomeProps): JSX.Element {
 
   const getAgent = () => chess.isWhite(gameState) ? players[0] : players[1]
 
-  const appendLog = (text: string) => {
+  const appendLog = (entry: Omit<LogEntry, 'id'>) => {
     logIdRef.current += 1
-    setAiLog(prev => [{ id: logIdRef.current, text }, ...prev].slice(0, 12))
+    setAiLog(prev => [{ id: logIdRef.current, ...entry }, ...prev].slice(0, 12))
   }
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    try {
+      const rawSettings = window.localStorage.getItem(playerSettingsStorageKey)
+      if (!rawSettings) {
+        return
+      }
+
+      const parsed = JSON.parse(rawSettings) as PlayerConfig[]
+      if (!Array.isArray(parsed) || parsed.length !== 2) {
+        return
+      }
+
+      const validSettings = parsed.map(config => ({
+        kind: typeof config?.kind === "string" ? config.kind : "empty",
+        depth: depthOptions.includes(Number(config?.depth)) ? Number(config.depth) : 2
+      }))
+
+      setPlayerConfigs(validSettings)
+      setPlayers([
+        mapAgent(validSettings[0], "white"),
+        mapAgent(validSettings[1], "black")
+      ])
+    } catch (_error) {
+      window.localStorage.removeItem(playerSettingsStorageKey)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    window.localStorage.setItem(playerSettingsStorageKey, JSON.stringify(playerConfigs))
+  }, [playerConfigs])
 
   useEffect(() => {
     console.log("🎮 Game started: " + gameStarted);
@@ -102,13 +149,29 @@ function Home(props: HomeProps): JSX.Element {
   }, [gameState, gameStarted])
 
   const AIMove = (agent: Agent) => {
-    const actingTeam = gameState.turn
+    const actingTeam = gameState.turn as "white" | "black"
     const actingIndex = actingTeam === "white" ? 0 : 1
-    appendLog(`${actingTeam} ${playerConfigs[actingIndex].kind} started search at depth ${playerConfigs[actingIndex].depth}`)
+    appendLog({
+      team: actingTeam,
+      kind: 'search',
+      agent: playerConfigs[actingIndex].kind,
+      depth: playerConfigs[actingIndex].depth,
+      text: `${actingTeam} ${playerConfigs[actingIndex].kind} started search at depth ${playerConfigs[actingIndex].depth}`
+    })
     const startedAt = Date.now()
     const move = agent.FindMove(gameState)
     const duration = Date.now() - startedAt
-    appendLog(`${actingTeam} AI played ${chess.notation(chess.toPosSafe(move.from))} -> ${chess.notation(chess.toPosSafe(move.to))} in ${duration} ms`)
+    const from = String(chess.notation(chess.toPosSafe(move.from)))
+    const to = String(chess.notation(chess.toPosSafe(move.to)))
+    appendLog({
+      team: actingTeam,
+      kind: 'move',
+      agent: playerConfigs[actingIndex].kind,
+      from,
+      to,
+      durationMs: duration,
+      text: `${actingTeam} AI played ${from} to ${to} in ${duration} ms`
+    })
 
     if (actingTeam === "white") {
       setWhiteThinkMs(prev => prev + duration)
@@ -442,7 +505,7 @@ function Home(props: HomeProps): JSX.Element {
                 </div>
                 <div className={styles.statCard}>
                   <span>Winner</span>
-                  <strong>{gameState.winner ?? (gameState.ended ? 'Draw' : 'Pending')}</strong>
+                  <strong>{gameState.winner ? gameState.winner : (gameState.ended ? 'Draw' : 'Pending')}</strong>
                 </div>
               </div>
               <div className={styles.actionRow}>
@@ -521,12 +584,26 @@ function Home(props: HomeProps): JSX.Element {
             <section className={styles.panelCard}>
               <p className={styles.panelLabel}>AI log</p>
               <h3>Activity</h3>
-              <p className={styles.lastMoveText}>
-                {gameState.lastMove ? `${chess.notation(chess.toPosSafe(gameState.lastMove.from))} -> ${chess.notation(chess.toPosSafe(gameState.lastMove.to))}` : 'No moves yet'}
-              </p>
               <div className={styles.logList}>
                 {aiLog.length === 0 && <p className={styles.panelMeta}>No AI actions yet.</p>}
-                {aiLog.map(entry => <p key={entry.id} className={styles.logEntry}>{entry.text}</p>)}
+                {aiLog.map(entry => (
+                  <div key={entry.id} className={styles.logEntry}>
+                    <div className={styles.logEntryHeader}>
+                      <span className={styles.logTeam + " " + (entry.team === 'white' ? styles.logWhite : styles.logBlack)}>{entry.team}</span>
+                      <span className={styles.logAgent}>{entry.agent}</span>
+                    </div>
+                    {entry.kind === 'move' && entry.from && entry.to ? (
+                      <div className={styles.logMoveRow}>
+                        <span className={styles.logSquare}>{entry.from}</span>
+                        <span className={styles.logArrow} aria-hidden="true">→</span>
+                        <span className={styles.logSquare}>{entry.to}</span>
+                        <span className={styles.logTime}>{entry.durationMs} ms</span>
+                      </div>
+                    ) : (
+                      <p className={styles.logText}>Searching at depth {entry.depth}</p>
+                    )}
+                  </div>
+                ))}
               </div>
             </section>
           </aside>
