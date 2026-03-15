@@ -1,6 +1,7 @@
 import { chess } from "../game/game"
 import { action, gameState, moveOptions, piece, team } from "../game/types/game-types"
 import { Agent } from "./agent"
+import { createYieldController, evaluateState, orderActions, pointMapper, readCache, writeCache } from "./search-utils"
 
 /// <summary>
 /// An agent that uses minimax with alpha-beta pruning
@@ -10,6 +11,7 @@ export class AlphaBetaAgent extends Agent {
     private depth: number = 3
     private team: team = "white"
     private defaultMoveTransform: moveOptions = { transformation: "queen" }
+    private transpositionTable = new Map<string, { depth: number, score: number }>()
 
     constructor(depth: number = 3, team: team = "white") {
         super()
@@ -18,7 +20,8 @@ export class AlphaBetaAgent extends Agent {
     }
 
     public FindMove(state: gameState): action {
-        const actions = this.getActions(state)
+        this.transpositionTable.clear()
+        const actions = orderActions(this.getActions(state), state, state.turn === this.team)
 
         if (actions.length === 0) {
             throw new Error("No legal moves available for " + state.turn)
@@ -52,49 +55,50 @@ export class AlphaBetaAgent extends Agent {
         return bestAction
     }
 
-    evaluate(state: gameState): number {
-        let score = 0
+    public async FindMoveAsync(state: gameState): Promise<action> {
+        this.transpositionTable.clear()
+        const actions = orderActions(this.getActions(state), state, state.turn === this.team)
 
-        for (const row of state.board) {
-            for (const square of row) {
-                if (!square.piece || !square.team) {
-                    continue
+        if (actions.length === 0) {
+            throw new Error("No legal moves available for " + state.turn)
+        }
+
+        const yieldController = createYieldController()
+        const maximizing = state.turn === this.team
+        let bestAction = actions[0]
+        let bestScore = maximizing ? -Infinity : Infinity
+        let alpha = -Infinity
+        let beta = Infinity
+
+        for (const candidate of actions) {
+            await yieldController.maybeYield()
+            const nextState = chess.move(candidate.from, candidate.to, state, this.defaultMoveTransform)
+            const score = await this.searchAsync(nextState, this.depth - 1, alpha, beta, yieldController)
+
+            if (maximizing) {
+                if (score > bestScore) {
+                    bestScore = score
+                    bestAction = candidate
                 }
-
-                const material = this.pointMapper(square.piece)
-                score += square.team === this.team ? material : -material
+                alpha = Math.max(alpha, bestScore)
+            } else {
+                if (score < bestScore) {
+                    bestScore = score
+                    bestAction = candidate
+                }
+                beta = Math.min(beta, bestScore)
             }
         }
 
-        if (chess.checkmate(state)) {
-            return state.turn === this.team ? -100000 : 100000
-        }
+        return bestAction
+    }
 
-        if (chess.stalemate(state)) {
-            return 0
-        }
-
-        const mobility = chess.allValidMoves(state).length
-        return score + (state.turn === this.team ? mobility : -mobility) * 0.05
+    evaluate(state: gameState): number {
+        return evaluateState(state, this.team)
     }
 
     pointMapper(piece: piece): number {
-        switch (piece) {
-            case "pawn":
-                return 1
-            case "rook":
-                return 5
-            case "knight":
-                return 3
-            case "bishop":
-                return 3
-            case "queen":
-                return 9
-            case "king":
-                return 100
-            default:
-                return 0
-        }
+        return pointMapper(piece)
     }
 
     getActions(state: gameState): action[] {
@@ -102,13 +106,22 @@ export class AlphaBetaAgent extends Agent {
     }
 
     private search(state: gameState, depth: number, alpha: number, beta: number): number {
-        if (depth <= 0 || this.terminalTest(state)) {
-            return this.evaluate(state)
+        const cached = readCache(this.transpositionTable, state, depth, this.team)
+        if (cached !== null) {
+            return cached
         }
 
-        const actions = this.getActions(state)
+        if (depth <= 0 || this.terminalTest(state)) {
+            const score = this.evaluate(state)
+            writeCache(this.transpositionTable, state, depth, this.team, score)
+            return score
+        }
+
+        const actions = orderActions(this.getActions(state), state, state.turn === this.team)
         if (actions.length === 0) {
-            return this.evaluate(state)
+            const score = this.evaluate(state)
+            writeCache(this.transpositionTable, state, depth, this.team, score)
+            return score
         }
 
         if (state.turn === this.team) {
@@ -121,6 +134,7 @@ export class AlphaBetaAgent extends Agent {
                     break
                 }
             }
+            writeCache(this.transpositionTable, state, depth, this.team, best)
             return best
         }
 
@@ -133,6 +147,55 @@ export class AlphaBetaAgent extends Agent {
                 break
             }
         }
+        writeCache(this.transpositionTable, state, depth, this.team, best)
+        return best
+    }
+
+    private async searchAsync(state: gameState, depth: number, alpha: number, beta: number, yieldController: { maybeYield: () => Promise<void> }): Promise<number> {
+        await yieldController.maybeYield()
+
+        const cached = readCache(this.transpositionTable, state, depth, this.team)
+        if (cached !== null) {
+            return cached
+        }
+
+        if (depth <= 0 || this.terminalTest(state)) {
+            const score = this.evaluate(state)
+            writeCache(this.transpositionTable, state, depth, this.team, score)
+            return score
+        }
+
+        const actions = orderActions(this.getActions(state), state, state.turn === this.team)
+        if (actions.length === 0) {
+            const score = this.evaluate(state)
+            writeCache(this.transpositionTable, state, depth, this.team, score)
+            return score
+        }
+
+        if (state.turn === this.team) {
+            let best = -Infinity
+            for (const candidate of actions) {
+                const nextState = chess.move(candidate.from, candidate.to, state, this.defaultMoveTransform)
+                best = Math.max(best, await this.searchAsync(nextState, depth - 1, alpha, beta, yieldController))
+                alpha = Math.max(alpha, best)
+                if (beta <= alpha) {
+                    break
+                }
+            }
+            writeCache(this.transpositionTable, state, depth, this.team, best)
+            return best
+        }
+
+        let best = Infinity
+        for (const candidate of actions) {
+            const nextState = chess.move(candidate.from, candidate.to, state, this.defaultMoveTransform)
+            best = Math.min(best, await this.searchAsync(nextState, depth - 1, alpha, beta, yieldController))
+            beta = Math.min(beta, best)
+            if (beta <= alpha) {
+                break
+            }
+        }
+        writeCache(this.transpositionTable, state, depth, this.team, best)
         return best
     }
 

@@ -56,6 +56,15 @@ it.each([
   ["minimax", new MinmaxAgent(2)],
   ["alpha-beta", new AlphaBetaAgent(2)],
   ["ordered alpha-beta", new OrderedAlphaBetaAgent(2)],
+])('agent %s supports async search', async (_name, agent) => {
+  const action = await agent.FindMoveAsync(state)
+  expect(action).toBeDefined()
+})
+
+it.each([
+  ["minimax", new MinmaxAgent(2)],
+  ["alpha-beta", new AlphaBetaAgent(2)],
+  ["ordered alpha-beta", new OrderedAlphaBetaAgent(2)],
 ])('agent %s can search a promotion position without failing', (_name, agent) => {
   const board = emptyBoard.map(row => [...row])
   board[1][0] = "p"

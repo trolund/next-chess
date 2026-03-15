@@ -139,7 +139,7 @@ function Home(props: HomeProps): JSX.Element {
         console.log("🤖 AI MOVE");
         setDisableUserInput(true)
         const timer = setTimeout(() => {
-          AIMove(agent)
+          void AIMove(agent)
         }, 80)
 
         return () => clearTimeout(timer)
@@ -148,7 +148,7 @@ function Home(props: HomeProps): JSX.Element {
 
   }, [gameState, gameStarted])
 
-  const AIMove = (agent: Agent) => {
+  const AIMove = async (agent: Agent) => {
     const actingTeam = gameState.turn as "white" | "black"
     const actingIndex = actingTeam === "white" ? 0 : 1
     appendLog({
@@ -159,7 +159,7 @@ function Home(props: HomeProps): JSX.Element {
       text: `${actingTeam} ${playerConfigs[actingIndex].kind} started search at depth ${playerConfigs[actingIndex].depth}`
     })
     const startedAt = Date.now()
-    const move = agent.FindMove(gameState)
+    const move = await agent.FindMoveAsync(gameState)
     const duration = Date.now() - startedAt
     const from = String(chess.notation(chess.toPosSafe(move.from)))
     const to = String(chess.notation(chess.toPosSafe(move.to)))

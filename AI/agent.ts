@@ -12,6 +12,9 @@ export abstract class Agent {
     /// Finds the best move for the agent
     /// </summary>
     public abstract FindMove(state: gameState): action
+    public async FindMoveAsync(state: gameState): Promise<action> {
+        return this.FindMove(state)
+    }
     /// <summary>
     /// Gets all the possible actions for the agent
     /// </summary>
