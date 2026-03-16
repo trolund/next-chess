@@ -12,6 +12,8 @@ import { Agent } from '../AI/agent'
 import { MinmaxAgent } from '../AI/MinmaxAgent'
 import { AlphaBetaAgent } from '../AI/AlphaBetaAgent'
 import { OrderedAlphaBetaAgent } from '../AI/OrderedAlphaBetaAgent'
+import { MCTSAgent } from '../AI/MCTSAgent'
+import { HeuristicAlphaBetaAgent } from '../AI/HeuristicAlphaBetaAgent'
 import Image from 'next/image'
 
 
@@ -19,7 +21,7 @@ interface HomeProps {
   dataStore?: DataStore;
 };
 
-const playerTypes = ["Minimax", "Alpha-Beta", "Ordered Alpha-Beta", "Human player"]
+const playerTypes = ["Minimax", "Alpha-Beta", "Ordered Alpha-Beta", "Heuristic Alpha-Beta", "MCTS", "Human player"]
 const depthOptions = [1, 2, 3, 4]
 const playerSettingsStorageKey = "next-chess-player-settings"
 const leaderboardStorageKey = "next-chess-leaderboard"
@@ -33,6 +35,7 @@ type LogEntry = {
   from?: string
   to?: string
   durationMs?: number
+  captureLabel?: string
   text: string
 }
 
@@ -285,6 +288,15 @@ function Home(props: HomeProps): JSX.Element {
     const startedAt = Date.now()
     const move = await agent.FindMoveAsync(gameState)
     const duration = Date.now() - startedAt
+    const fromPos = chess.toPosSafe(move.from)
+    const toPos = chess.toPosSafe(move.to)
+    const movingField = chess.getFieldAtPos(fromPos, gameState)
+    const targetField = chess.getFieldAtPos(toPos, gameState)
+    const captureField = targetField.piece
+      ? targetField
+      : movingField.piece === "pawn" && gameState.enPassantTarget && chess.comparePos(gameState.enPassantTarget, toPos)
+        ? chess.getFieldAtPos({ row: fromPos.row, col: toPos.col }, gameState)
+        : null
     const from = String(chess.notation(chess.toPosSafe(move.from)))
     const to = String(chess.notation(chess.toPosSafe(move.to)))
     appendLog({
@@ -294,6 +306,7 @@ function Home(props: HomeProps): JSX.Element {
       from,
       to,
       durationMs: duration,
+      captureLabel: captureField?.piece ? `${captureField.team} ${captureField.piece}` : undefined,
       text: `${actingTeam} AI played ${from} to ${to} in ${duration} ms`
     })
 
@@ -337,6 +350,8 @@ function Home(props: HomeProps): JSX.Element {
       if(config.kind === "Human player") return null
       if(config.kind === "Alpha-Beta") return new AlphaBetaAgent(config.depth, team)
       if(config.kind === "Ordered Alpha-Beta") return new OrderedAlphaBetaAgent(config.depth, team)
+      if(config.kind === "Heuristic Alpha-Beta") return new HeuristicAlphaBetaAgent(config.depth, team)
+      if(config.kind === "MCTS") return new MCTSAgent(config.depth, team)
       return new MinmaxAgent(config.depth, team)
   }
 
@@ -442,7 +457,7 @@ function Home(props: HomeProps): JSX.Element {
     }
   }
 
-  const logFieldClick = (f: field) => console.log(`Notation: ${chess.notation(f.pos!)}, (row:${f.pos?.row},col:${f.pos?.col}), ${f.piece + ", " ?? ""} ${f.team ?? ""}`);
+  const logFieldClick = (f: field) => console.log(`Notation: ${chess.notation(f.pos!)}, (row:${f.pos?.row},col:${f.pos?.col}), ${f.piece + ", "} ${f.team ?? ""}`);
 
   useEffect(() => {
     if (!gameStarted) {
@@ -745,12 +760,15 @@ function Home(props: HomeProps): JSX.Element {
                       <span className={styles.logAgent}>{entry.agent}</span>
                     </div>
                     {entry.kind === 'move' && entry.from && entry.to ? (
-                      <div className={styles.logMoveRow}>
-                        <span className={styles.logSquare}>{entry.from}</span>
-                        <span className={styles.logArrow} aria-hidden="true">→</span>
-                        <span className={styles.logSquare}>{entry.to}</span>
-                        <span className={styles.logTime}>{entry.durationMs} ms</span>
-                      </div>
+                      <>
+                        <div className={styles.logMoveRow}>
+                          <span className={styles.logSquare}>{entry.from}</span>
+                          <span className={styles.logArrow} aria-hidden="true">→</span>
+                          <span className={styles.logSquare}>{entry.to}</span>
+                          <span className={styles.logTime}>{entry.durationMs} ms</span>
+                        </div>
+                        {entry.captureLabel && <p className={styles.logCapture}>Captured {entry.captureLabel}</p>}
+                      </>
                     ) : (
                       <p className={styles.logText}>Searching at depth {entry.depth}</p>
                     )}

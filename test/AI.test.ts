@@ -8,6 +8,8 @@ import { Timer } from "./timer";
 import { MinmaxAgent } from "../AI/MinmaxAgent";
 import { AlphaBetaAgent } from "../AI/AlphaBetaAgent";
 import { OrderedAlphaBetaAgent } from "../AI/OrderedAlphaBetaAgent";
+import { MCTSAgent } from "../AI/MCTSAgent";
+import { HeuristicAlphaBetaAgent } from "../AI/HeuristicAlphaBetaAgent";
 import { emptyBoard } from "../stores/emptyBoard";
 
 let state: gameState
@@ -52,10 +54,36 @@ it('ai ordered alpha-beta depth 2', () => {
   console.log(action, timer.getEndTimeAsDateString)
 })
 
+it('ai mcts depth 2', () => {
+  const timer = new Timer()
+  const agent = new MCTSAgent(2)
+
+  timer.start()
+  const action = agent.FindMove(state)
+  timer.end()
+
+  expect(action).toBeDefined()
+  console.log(action, timer.getEndTimeAsDateString)
+})
+
+it('ai heuristic alpha-beta depth 2', () => {
+  const timer = new Timer()
+  const agent = new HeuristicAlphaBetaAgent(2)
+
+  timer.start()
+  const action = agent.FindMove(state)
+  timer.end()
+
+  expect(action).toBeDefined()
+  console.log(action, timer.getEndTimeAsDateString)
+})
+
 it.each([
   ["minimax", new MinmaxAgent(2)],
   ["alpha-beta", new AlphaBetaAgent(2)],
   ["ordered alpha-beta", new OrderedAlphaBetaAgent(2)],
+  ["heuristic alpha-beta", new HeuristicAlphaBetaAgent(2)],
+  ["mcts", new MCTSAgent(2)],
 ])('agent %s supports async search', async (_name, agent) => {
   const action = await agent.FindMoveAsync(state)
   expect(action).toBeDefined()
@@ -65,6 +93,8 @@ it.each([
   ["minimax", new MinmaxAgent(2)],
   ["alpha-beta", new AlphaBetaAgent(2)],
   ["ordered alpha-beta", new OrderedAlphaBetaAgent(2)],
+  ["heuristic alpha-beta", new HeuristicAlphaBetaAgent(2)],
+  ["mcts", new MCTSAgent(2)],
 ])('agent %s can search a promotion position without failing', (_name, agent) => {
   const board = emptyBoard.map(row => [...row])
   board[1][0] = "p"
@@ -81,6 +111,8 @@ it.each([
   ["minimax", new MinmaxAgent(2)],
   ["alpha-beta", new AlphaBetaAgent(2)],
   ["ordered alpha-beta", new OrderedAlphaBetaAgent(2)],
+  ["heuristic alpha-beta", new HeuristicAlphaBetaAgent(2)],
+  ["mcts", new MCTSAgent(2)],
 ])('agent %s returns a legal move in an en-passant position', (_name, agent) => {
   const board = emptyBoard.map(row => [...row])
   board[3][4] = "p"

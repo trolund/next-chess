@@ -384,7 +384,14 @@ export module chess {
         }
 
         try {
-            const simulated = moveWithoutValidation(state, from, to, moveOptions, false)
+            const movingField = getFieldAtPos(from, state)
+            const simulationOptions = moveOptions ?? (
+                movingField.piece === "pawn" && canTransform(movingField, to)
+                    ? { transformation: "queen" as piece }
+                    : undefined
+            )
+
+            const simulated = moveWithoutValidation(state, from, to, simulationOptions, false)
             const simulatedKing = getKing(simulated, state.turn)
             if (!simulatedKing) {
                 return true
