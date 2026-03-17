@@ -1,0 +1,535 @@
+{
+  "version": 1,
+  "generatedAt": "2026-03-16T20:42:40.778Z",
+  "settings": {
+    "rounds": 2,
+    "maxPlies": 160,
+    "parallelism": 4,
+    "profiles": [
+      {
+        "kind": "Minimax",
+        "depth": 1
+      },
+      {
+        "kind": "Minimax",
+        "depth": 2
+      },
+      {
+        "kind": "Alpha-Beta",
+        "depth": 1
+      },
+      {
+        "kind": "Alpha-Beta",
+        "depth": 2
+      }
+    ]
+  },
+  "leaderboard": [
+    {
+      "id": "minimax-d2",
+      "label": "Minimax D2",
+      "isAI": true,
+      "rating": 1295,
+      "games": 12,
+      "wins": 10,
+      "losses": 0,
+      "draws": 2,
+      "totalThinkMs": 3374652,
+      "totalMoves": 224
+    },
+    {
+      "id": "alpha-beta-d2",
+      "label": "Alpha-Beta D2",
+      "isAI": true,
+      "rating": 1237,
+      "games": 12,
+      "wins": 6,
+      "losses": 2,
+      "draws": 4,
+      "totalThinkMs": 1568413,
+      "totalMoves": 270
+    },
+    {
+      "id": "alpha-beta-d1",
+      "label": "Alpha-Beta D1",
+      "isAI": true,
+      "rating": 1144,
+      "games": 12,
+      "wins": 0,
+      "losses": 6,
+      "draws": 6,
+      "totalThinkMs": 64465,
+      "totalMoves": 268
+    },
+    {
+      "id": "minimax-d1",
+      "label": "Minimax D1",
+      "isAI": true,
+      "rating": 1124,
+      "games": 12,
+      "wins": 0,
+      "losses": 8,
+      "draws": 4,
+      "totalThinkMs": 57715,
+      "totalMoves": 280
+    }
+  ],
+  "matches": [
+    {
+      "id": "r1-0-1-w",
+      "white": {
+        "kind": "Minimax",
+        "depth": 1
+      },
+      "black": {
+        "kind": "Minimax",
+        "depth": 2
+      },
+      "winner": "black",
+      "result": "checkmate",
+      "plies": 18,
+      "whiteThinkMs": 2005,
+      "blackThinkMs": 116023,
+      "whiteMoves": 9,
+      "blackMoves": 9,
+      "durationMs": 118122
+    },
+    {
+      "id": "r1-0-1-b",
+      "white": {
+        "kind": "Minimax",
+        "depth": 2
+      },
+      "black": {
+        "kind": "Minimax",
+        "depth": 1
+      },
+      "winner": "white",
+      "result": "checkmate",
+      "plies": 15,
+      "whiteThinkMs": 92089,
+      "blackThinkMs": 1262,
+      "whiteMoves": 8,
+      "blackMoves": 7,
+      "durationMs": 93436
+    },
+    {
+      "id": "r1-0-2-w",
+      "white": {
+        "kind": "Minimax",
+        "depth": 1
+      },
+      "black": {
+        "kind": "Alpha-Beta",
+        "depth": 1
+      },
+      "winner": null,
+      "result": "threefold-repetition",
+      "plies": 99,
+      "whiteThinkMs": 7592,
+      "blackThinkMs": 7093,
+      "whiteMoves": 50,
+      "blackMoves": 49,
+      "durationMs": 15207
+    },
+    {
+      "id": "r1-0-2-b",
+      "white": {
+        "kind": "Alpha-Beta",
+        "depth": 1
+      },
+      "black": {
+        "kind": "Minimax",
+        "depth": 1
+      },
+      "winner": null,
+      "result": "threefold-repetition",
+      "plies": 66,
+      "whiteThinkMs": 8192,
+      "blackThinkMs": 7359,
+      "whiteMoves": 33,
+      "blackMoves": 33,
+      "durationMs": 16041
+    },
+    {
+      "id": "r1-0-3-w",
+      "white": {
+        "kind": "Minimax",
+        "depth": 1
+      },
+      "black": {
+        "kind": "Alpha-Beta",
+        "depth": 2
+      },
+      "winner": "black",
+      "result": "checkmate",
+      "plies": 68,
+      "whiteThinkMs": 9864,
+      "blackThinkMs": 123467,
+      "whiteMoves": 34,
+      "blackMoves": 34,
+      "durationMs": 134004
+    },
+    {
+      "id": "r1-0-3-b",
+      "white": {
+        "kind": "Alpha-Beta",
+        "depth": 2
+      },
+      "black": {
+        "kind": "Minimax",
+        "depth": 1
+      },
+      "winner": "white",
+      "result": "checkmate",
+      "plies": 15,
+      "whiteThinkMs": 36975,
+      "blackThinkMs": 1820,
+      "whiteMoves": 8,
+      "blackMoves": 7,
+      "durationMs": 38908
+    },
+    {
+      "id": "r1-1-2-w",
+      "white": {
+        "kind": "Minimax",
+        "depth": 2
+      },
+      "black": {
+        "kind": "Alpha-Beta",
+        "depth": 1
+      },
+      "winner": "white",
+      "result": "checkmate",
+      "plies": 39,
+      "whiteThinkMs": 300474,
+      "blackThinkMs": 7185,
+      "whiteMoves": 20,
+      "blackMoves": 19,
+      "durationMs": 307992
+    },
+    {
+      "id": "r1-1-2-b",
+      "white": {
+        "kind": "Alpha-Beta",
+        "depth": 1
+      },
+      "black": {
+        "kind": "Minimax",
+        "depth": 2
+      },
+      "winner": "black",
+      "result": "checkmate",
+      "plies": 16,
+      "whiteThinkMs": 3819,
+      "blackThinkMs": 184413,
+      "whiteMoves": 8,
+      "blackMoves": 8,
+      "durationMs": 188367
+    },
+    {
+      "id": "r1-1-3-w",
+      "white": {
+        "kind": "Minimax",
+        "depth": 2
+      },
+      "black": {
+        "kind": "Alpha-Beta",
+        "depth": 2
+      },
+      "winner": null,
+      "result": "threefold-repetition",
+      "plies": 30,
+      "whiteThinkMs": 175528,
+      "blackThinkMs": 58713,
+      "whiteMoves": 15,
+      "blackMoves": 15,
+      "durationMs": 234432
+    },
+    {
+      "id": "r1-1-3-b",
+      "white": {
+        "kind": "Alpha-Beta",
+        "depth": 2
+      },
+      "black": {
+        "kind": "Minimax",
+        "depth": 2
+      },
+      "winner": "black",
+      "result": "checkmate",
+      "plies": 104,
+      "whiteThinkMs": 281883,
+      "blackThinkMs": 605381,
+      "whiteMoves": 52,
+      "blackMoves": 52,
+      "durationMs": 887980
+    },
+    {
+      "id": "r1-2-3-w",
+      "white": {
+        "kind": "Alpha-Beta",
+        "depth": 1
+      },
+      "black": {
+        "kind": "Alpha-Beta",
+        "depth": 2
+      },
+      "winner": "black",
+      "result": "checkmate",
+      "plies": 16,
+      "whiteThinkMs": 3804,
+      "blackThinkMs": 42838,
+      "whiteMoves": 8,
+      "blackMoves": 8,
+      "durationMs": 46773
+    },
+    {
+      "id": "r1-2-3-b",
+      "white": {
+        "kind": "Alpha-Beta",
+        "depth": 2
+      },
+      "black": {
+        "kind": "Alpha-Beta",
+        "depth": 1
+      },
+      "winner": null,
+      "result": "threefold-repetition",
+      "plies": 35,
+      "whiteThinkMs": 145369,
+      "blackThinkMs": 5376,
+      "whiteMoves": 18,
+      "blackMoves": 17,
+      "durationMs": 151066
+    },
+    {
+      "id": "r2-0-1-w",
+      "white": {
+        "kind": "Minimax",
+        "depth": 1
+      },
+      "black": {
+        "kind": "Minimax",
+        "depth": 2
+      },
+      "winner": "black",
+      "result": "checkmate",
+      "plies": 18,
+      "whiteThinkMs": 2719,
+      "blackThinkMs": 163763,
+      "whiteMoves": 9,
+      "blackMoves": 9,
+      "durationMs": 166619
+    },
+    {
+      "id": "r2-0-1-b",
+      "white": {
+        "kind": "Minimax",
+        "depth": 2
+      },
+      "black": {
+        "kind": "Minimax",
+        "depth": 1
+      },
+      "winner": "white",
+      "result": "checkmate",
+      "plies": 15,
+      "whiteThinkMs": 90776,
+      "blackThinkMs": 1250,
+      "whiteMoves": 8,
+      "blackMoves": 7,
+      "durationMs": 92108
+    },
+    {
+      "id": "r2-0-2-w",
+      "white": {
+        "kind": "Minimax",
+        "depth": 1
+      },
+      "black": {
+        "kind": "Alpha-Beta",
+        "depth": 1
+      },
+      "winner": null,
+      "result": "threefold-repetition",
+      "plies": 99,
+      "whiteThinkMs": 7360,
+      "blackThinkMs": 6875,
+      "whiteMoves": 50,
+      "blackMoves": 49,
+      "durationMs": 14708
+    },
+    {
+      "id": "r2-0-2-b",
+      "white": {
+        "kind": "Alpha-Beta",
+        "depth": 1
+      },
+      "black": {
+        "kind": "Minimax",
+        "depth": 1
+      },
+      "winner": null,
+      "result": "threefold-repetition",
+      "plies": 66,
+      "whiteThinkMs": 5566,
+      "blackThinkMs": 5031,
+      "whiteMoves": 33,
+      "blackMoves": 33,
+      "durationMs": 10872
+    },
+    {
+      "id": "r2-0-3-w",
+      "white": {
+        "kind": "Minimax",
+        "depth": 1
+      },
+      "black": {
+        "kind": "Alpha-Beta",
+        "depth": 2
+      },
+      "winner": "black",
+      "result": "checkmate",
+      "plies": 68,
+      "whiteThinkMs": 9671,
+      "blackThinkMs": 121864,
+      "whiteMoves": 34,
+      "blackMoves": 34,
+      "durationMs": 132212
+    },
+    {
+      "id": "r2-0-3-b",
+      "white": {
+        "kind": "Alpha-Beta",
+        "depth": 2
+      },
+      "black": {
+        "kind": "Minimax",
+        "depth": 1
+      },
+      "winner": "white",
+      "result": "checkmate",
+      "plies": 15,
+      "whiteThinkMs": 36385,
+      "blackThinkMs": 1782,
+      "whiteMoves": 8,
+      "blackMoves": 7,
+      "durationMs": 38278
+    },
+    {
+      "id": "r2-1-2-w",
+      "white": {
+        "kind": "Minimax",
+        "depth": 2
+      },
+      "black": {
+        "kind": "Alpha-Beta",
+        "depth": 1
+      },
+      "winner": "white",
+      "result": "checkmate",
+      "plies": 39,
+      "whiteThinkMs": 211533,
+      "blackThinkMs": 5082,
+      "whiteMoves": 20,
+      "blackMoves": 19,
+      "durationMs": 216845
+    },
+    {
+      "id": "r2-1-2-b",
+      "white": {
+        "kind": "Alpha-Beta",
+        "depth": 1
+      },
+      "black": {
+        "kind": "Minimax",
+        "depth": 2
+      },
+      "winner": "black",
+      "result": "checkmate",
+      "plies": 16,
+      "whiteThinkMs": 3807,
+      "blackThinkMs": 184379,
+      "whiteMoves": 8,
+      "blackMoves": 8,
+      "durationMs": 188321
+    },
+    {
+      "id": "r2-1-3-w",
+      "white": {
+        "kind": "Minimax",
+        "depth": 2
+      },
+      "black": {
+        "kind": "Alpha-Beta",
+        "depth": 2
+      },
+      "winner": null,
+      "result": "threefold-repetition",
+      "plies": 30,
+      "whiteThinkMs": 246280,
+      "blackThinkMs": 83043,
+      "whiteMoves": 15,
+      "blackMoves": 15,
+      "durationMs": 329597
+    },
+    {
+      "id": "r2-1-3-b",
+      "white": {
+        "kind": "Alpha-Beta",
+        "depth": 2
+      },
+      "black": {
+        "kind": "Minimax",
+        "depth": 2
+      },
+      "winner": "black",
+      "result": "checkmate",
+      "plies": 104,
+      "whiteThinkMs": 491442,
+      "blackThinkMs": 1004013,
+      "whiteMoves": 52,
+      "blackMoves": 52,
+      "durationMs": 1496672
+    },
+    {
+      "id": "r2-2-3-w",
+      "white": {
+        "kind": "Alpha-Beta",
+        "depth": 1
+      },
+      "black": {
+        "kind": "Alpha-Beta",
+        "depth": 2
+      },
+      "winner": "black",
+      "result": "checkmate",
+      "plies": 16,
+      "whiteThinkMs": 3836,
+      "blackThinkMs": 43244,
+      "whiteMoves": 8,
+      "blackMoves": 8,
+      "durationMs": 47214
+    },
+    {
+      "id": "r2-2-3-b",
+      "white": {
+        "kind": "Alpha-Beta",
+        "depth": 2
+      },
+      "black": {
+        "kind": "Alpha-Beta",
+        "depth": 1
+      },
+      "winner": null,
+      "result": "threefold-repetition",
+      "plies": 35,
+      "whiteThinkMs": 103190,
+      "blackThinkMs": 3830,
+      "whiteMoves": 18,
+      "blackMoves": 17,
+      "durationMs": 107247
+    }
+  ]
+}

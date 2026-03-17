@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "jest"
+    "test": "jest",
+    "evaluate:agents": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' node -r ts-node/register/transpile-only scripts/evaluate-agents.ts"
   },
   "dependencies": {
     "@babel/plugin-proposal-decorators": "^7.16.7",

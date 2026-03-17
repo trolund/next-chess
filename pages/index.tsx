@@ -9,19 +9,15 @@ import TestLoader from '../components/testLoader'
 import TransformationModal from '../components/transformationModal'
 import { useRouter } from 'next/router'
 import { Agent } from '../AI/agent'
-import { MinmaxAgent } from '../AI/MinmaxAgent'
-import { AlphaBetaAgent } from '../AI/AlphaBetaAgent'
-import { OrderedAlphaBetaAgent } from '../AI/OrderedAlphaBetaAgent'
-import { MCTSAgent } from '../AI/MCTSAgent'
-import { HeuristicAlphaBetaAgent } from '../AI/HeuristicAlphaBetaAgent'
 import Image from 'next/image'
+import { createAgent, playerTypes } from '../AI/agent-factory'
+import { applyMatchToLeaderboard, LeaderboardEntry, parseLeaderboardImport, PlayerConfig } from '../lib/leaderboard'
 
 
 interface HomeProps {
   dataStore?: DataStore;
 };
 
-const playerTypes = ["Minimax", "Alpha-Beta", "Ordered Alpha-Beta", "Heuristic Alpha-Beta", "MCTS", "Human player"]
 const depthOptions = [1, 2, 3, 4]
 const playerSettingsStorageKey = "next-chess-player-settings"
 const leaderboardStorageKey = "next-chess-leaderboard"
@@ -37,24 +33,6 @@ type LogEntry = {
   durationMs?: number
   captureLabel?: string
   text: string
-}
-
-type PlayerConfig = {
-  kind: string
-  depth: number
-}
-
-type LeaderboardEntry = {
-  id: string
-  label: string
-  isAI: boolean
-  rating: number
-  games: number
-  wins: number
-  losses: number
-  draws: number
-  totalThinkMs: number
-  totalMoves: number
 }
 
 function Home(props: HomeProps): JSX.Element {
@@ -109,92 +87,14 @@ function Home(props: HomeProps): JSX.Element {
     setAiLog(prev => [{ id: logIdRef.current, ...entry }, ...prev].slice(0, 12))
   }
 
-  const profileId = (config: PlayerConfig, teamLabel: "White" | "Black") => {
-    if (config.kind === "empty") {
-      return `${teamLabel}-unconfigured`
-    }
-
-    if (config.kind === "Human player") {
-      return "human-player"
-    }
-
-    return `${config.kind.toLowerCase().replace(/\s+/g, "-")}-d${config.depth}`
-  }
-
-  const profileLabel = (config: PlayerConfig) => {
-    if (config.kind === "empty") return "Not configured"
-    if (config.kind === "Human player") return "Human player"
-    return `${config.kind} D${config.depth}`
-  }
-
-  const ensureEntry = (entries: LeaderboardEntry[], config: PlayerConfig, side: "White" | "Black"): LeaderboardEntry => {
-    const id = profileId(config, side)
-    const existing = entries.find(entry => entry.id === id)
-    if (existing) {
-      return existing
-    }
-
-    const created: LeaderboardEntry = {
-      id,
-      label: profileLabel(config),
-      isAI: config.kind !== "Human player" && config.kind !== "empty",
-      rating: 1200,
-      games: 0,
-      wins: 0,
-      losses: 0,
-      draws: 0,
-      totalThinkMs: 0,
-      totalMoves: 0
-    }
-
-    entries.push(created)
-    return created
-  }
-
-  const expectedScore = (ratingA: number, ratingB: number) => 1 / (1 + Math.pow(10, (ratingB - ratingA) / 400))
-
-  const applyMatchToLeaderboard = () => {
-    setLeaderboard(prev => {
-      const next = prev.map(entry => ({ ...entry }))
-      const whiteEntry = ensureEntry(next, playerConfigs[0], "White")
-      const blackEntry = ensureEntry(next, playerConfigs[1], "Black")
-
-      const whiteIsWinner = gameState.winner === "white"
-      const blackIsWinner = gameState.winner === "black"
-      const isDraw = gameState.winner === null
-
-      whiteEntry.games += 1
-      blackEntry.games += 1
-
-      if (isDraw) {
-        whiteEntry.draws += 1
-        blackEntry.draws += 1
-      } else if (whiteIsWinner) {
-        whiteEntry.wins += 1
-        blackEntry.losses += 1
-      } else if (blackIsWinner) {
-        blackEntry.wins += 1
-        whiteEntry.losses += 1
-      }
-
-      whiteEntry.totalThinkMs += whiteThinkMs
-      blackEntry.totalThinkMs += blackThinkMs
-      whiteEntry.totalMoves += whiteAIMoveCount
-      blackEntry.totalMoves += blackAIMoveCount
-
-      if (whiteEntry.id !== blackEntry.id) {
-        const whiteExpected = expectedScore(whiteEntry.rating, blackEntry.rating)
-        const blackExpected = expectedScore(blackEntry.rating, whiteEntry.rating)
-        const whiteScore = isDraw ? 0.5 : whiteIsWinner ? 1 : 0
-        const blackScore = isDraw ? 0.5 : blackIsWinner ? 1 : 0
-        const kFactor = 24
-
-        whiteEntry.rating = Math.round(whiteEntry.rating + kFactor * (whiteScore - whiteExpected))
-        blackEntry.rating = Math.round(blackEntry.rating + kFactor * (blackScore - blackExpected))
-      }
-
-      return next.sort((left, right) => right.rating - left.rating || right.wins - left.wins || left.losses - right.losses)
-    })
+  const recordMatchOnLeaderboard = () => {
+    setLeaderboard(prev => applyMatchToLeaderboard(prev, playerConfigs[0], playerConfigs[1], {
+      winner: gameState.winner ?? null,
+      whiteThinkMs,
+      blackThinkMs,
+      whiteMoves: whiteAIMoveCount,
+      blackMoves: blackAIMoveCount
+    }))
   }
 
   useEffect(() => {
@@ -226,8 +126,8 @@ function Home(props: HomeProps): JSX.Element {
 
       const storedLeaderboard = window.localStorage.getItem(leaderboardStorageKey)
       if (storedLeaderboard) {
-        const parsedBoard = JSON.parse(storedLeaderboard) as LeaderboardEntry[]
-        if (Array.isArray(parsedBoard)) {
+        const parsedBoard = parseLeaderboardImport(JSON.parse(storedLeaderboard))
+        if (parsedBoard) {
           setLeaderboard(parsedBoard)
         }
       }
@@ -346,13 +246,28 @@ function Home(props: HomeProps): JSX.Element {
   }
 
   const mapAgent = (config: PlayerConfig, team: team) => {
-      if(config.kind === "empty") return null
-      if(config.kind === "Human player") return null
-      if(config.kind === "Alpha-Beta") return new AlphaBetaAgent(config.depth, team)
-      if(config.kind === "Ordered Alpha-Beta") return new OrderedAlphaBetaAgent(config.depth, team)
-      if(config.kind === "Heuristic Alpha-Beta") return new HeuristicAlphaBetaAgent(config.depth, team)
-      if(config.kind === "MCTS") return new MCTSAgent(config.depth, team)
-      return new MinmaxAgent(config.depth, team)
+      return createAgent(config, team)
+  }
+
+  const importLeaderboardReport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) {
+      return
+    }
+
+    try {
+      const payload = JSON.parse(await file.text())
+      const imported = parseLeaderboardImport(payload)
+      if (!imported) {
+        throw new Error("Unsupported leaderboard report format")
+      }
+
+      setLeaderboard(imported)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      event.target.value = ""
+    }
   }
 
   const resetGame = () => {
@@ -514,7 +429,7 @@ function Home(props: HomeProps): JSX.Element {
     }
 
     recordedMatchKey.current = matchKey
-    applyMatchToLeaderboard()
+    recordMatchOnLeaderboard()
   }, [gameStarted, gameState.ended, gameState.result, gameState.winner, gameState.lastMove, whiteThinkMs, blackThinkMs, whiteAIMoveCount, blackAIMoveCount])
 
   useEffect(() => {
@@ -787,7 +702,13 @@ function Home(props: HomeProps): JSX.Element {
                   <p className={styles.panelLabel}>Leaderboard</p>
                   <h3>Ranked profiles</h3>
                 </div>
-                <button className={styles.secondaryButton + " " + styles.rankingsCloseButton} onClick={() => setShowLeaderboardModal(false)}>Close</button>
+                <div className={styles.actionRow}>
+                  <label className={styles.secondaryButton}>
+                    Import report
+                    <input type="file" accept="application/json" hidden onChange={importLeaderboardReport} />
+                  </label>
+                  <button className={styles.secondaryButton + " " + styles.rankingsCloseButton} onClick={() => setShowLeaderboardModal(false)}>Close</button>
+                </div>
               </div>
 
               <div className={styles.rankingsGrid}>
