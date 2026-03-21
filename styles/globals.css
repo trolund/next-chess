@@ -2,6 +2,7 @@
   --field-size: 55px;
   --black-color: rgb(48, 48, 48);
   --white-color: rgb(240, 240, 240);
+  --page-text: #2e2a23;
 }
 
 @media only screen and (max-width: 500px) {
@@ -32,8 +33,9 @@ html,
 body {
   padding: 0;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  color: var(--page-text);
+  background: #ece2cd;
 }
 
 a {
@@ -43,4 +45,10 @@ a {
 
 * {
   box-sizing: border-box;
+}
+
+button,
+select,
+input {
+  font: inherit;
 }

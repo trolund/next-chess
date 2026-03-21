@@ -1,27 +1,35 @@
-import { emptyBoard } from "../stores/emptyBoard"
-import { testUtil } from "../test/utils/testUtil"
 import { colOptions } from "./col-options"
 import { bishop, king, knight, pawn, pawnAttack, queen, rook } from "./move-validator"
-import { action, board, chessPos, field, gameState, moveOptions, piece, pos, team } from './types/game-types';
+import { action, board, castlingRights, chessPos, field, gameResult, gameState, moveOptions, piece, pos, team } from './types/game-types';
 import _ from "lodash"
 
 export module chess {
 
-    // formatting debug 
+    const defaultCastlingRights = (): castlingRights => ({
+        white: { kingSide: true, queenSide: true },
+        black: { kingSide: true, queenSide: true }
+    })
+
+    const clonePos = (input: pos | null | undefined): pos | null => input ? { row: input.row, col: input.col } : null
+
+    const samePos = (a?: pos | null, b?: pos | null): boolean => !!a && !!b && a.row === b.row && a.col === b.col
+
+    const inBounds = (position: pos) => position.row >= 0 && position.row < 8 && position.col >= 0 && position.col < 8
+
+    const opponent = (turn: team): team => turn === "white" ? "black" : "white"
+
+    const backLineWhite: piece[] = ["rook", "knight", "bishop", "king", "queen", "bishop", "knight", "rook"]
+    const backLineBlack: piece[] = [...backLineWhite].reverse()
+
+    // formatting debug
     const formatPos = (pos: pos): string => `${notation(pos)} - (${pos.row}, ${pos.col})`
 
     // get color of board
     export const getBoardColor = (row: number, col: number): team => (row + col) % 2 == 0 ? "white" : "black"
 
-    // operations
     const createNewBoard = (): board => {
-
-        const backLineWhite: piece[] = ["rook", "knight", "bishop", "king", "queen", "bishop", "knight", "rook"]
-        const backLineBlack: piece[] = [...backLineWhite].reverse()
-
         const getPiece = (row: number, col: number): field => {
-
-            const pos: pos = {row: row, col: col};
+            const pos: pos = { row, col };
 
             if (row === 0) {
                 return { piece: backLineBlack[col], color: getBoardColor(row, col), team: "black", pos }
@@ -39,16 +47,15 @@ export module chess {
                 return { piece: "pawn", color: getBoardColor(row, col), team: "white", pos }
             }
 
-            return { piece: null, color: getBoardColor(row, col), team: null, pos } 
+            return { piece: null, color: getBoardColor(row, col), team: null, pos }
         }
 
         const board: field[][] = []
 
-        for (var row: number = 0; row < 8; row++) {
-
+        for (let row = 0; row < 8; row++) {
             board[row] = []
 
-            for (var col: number = 0; col < 8; col++) {
+            for (let col = 0; col < 8; col++) {
                 board[row][col] = getPiece(row, col)
             }
         }
@@ -56,349 +63,638 @@ export module chess {
         return board
     }
 
+    const getKing = (state: gameState, targetTeam: team): field | undefined =>
+        state.board.flat().find(f => f.piece === "king" && f.team === targetTeam)
+
+    const hasRelevantEnPassantTarget = (state: gameState): boolean => {
+        const target = state.enPassantTarget
+
+        if (!target) {
+            return false
+        }
+
+        const pawnRow = state.turn === "white" ? target.row + 1 : target.row - 1
+        if (!inBounds({ row: pawnRow, col: target.col })) {
+            return false
+        }
+
+        const pawnField = state.board[pawnRow][target.col]
+        if (pawnField.piece !== "pawn" || pawnField.team !== opponent(state.turn)) {
+            return false
+        }
+
+        return [-1, 1].some(offset => {
+            const candidate: pos = { row: target.row, col: target.col + offset }
+            if (!inBounds(candidate)) {
+                return false
+            }
+
+            const adjacent = state.board[candidate.row][candidate.col]
+            return adjacent.piece === "pawn" && adjacent.team === state.turn
+        })
+    }
+
+    const pieceToFenToken = (square: field): string | null => {
+        if (!square.piece || !square.team) {
+            return null
+        }
+
+        const normalized = square.piece === "knight" ? "n" : square.piece[0]
+        return square.team === "white" ? normalized.toUpperCase() : normalized.toLowerCase()
+    }
+
+    const serializePosition = (state: gameState): string => {
+        const boardState = state.board
+            .map(row => row.map(field => {
+                const fenToken = pieceToFenToken(field)
+                if (!fenToken) {
+                    return "#"
+                }
+
+                return field.team === "white" ? fenToken.toLowerCase() : fenToken.toUpperCase()
+            }).join(""))
+            .join("/")
+
+        const rights = state.castlingRights ?? defaultCastlingRights()
+        const castling = `${rights.white.kingSide ? "K" : ""}${rights.white.queenSide ? "Q" : ""}${rights.black.kingSide ? "k" : ""}${rights.black.queenSide ? "q" : ""}` || "-"
+        const enPassant = hasRelevantEnPassantTarget(state) && state.enPassantTarget ? notation(state.enPassantTarget) : "-"
+        return `${boardState}|${state.turn}|${castling}|${enPassant}`
+    }
+
+    const countOccurrences = (history: string[], target: string): number => history.filter(entry => entry === target).length
+
+    const getDrawReason = (state: gameState): gameResult => {
+        if (stalemate(state)) {
+            return "stalemate"
+        }
+
+        if (insufficientMaterial(state)) {
+            return "insufficient-material"
+        }
+
+        if ((state.halfMoveClock ?? 0) >= 100) {
+            return "fifty-move-rule"
+        }
+
+        const currentPosition = serializePosition(state)
+        if (countOccurrences(state.positionHistory ?? [], currentPosition) >= 3) {
+            return "threefold-repetition"
+        }
+
+        return null
+    }
+
+    const isMinorPiece = (piece: piece) => piece === "bishop" || piece === "knight"
+
+    const canTransform = (fromField: field, to: pos) =>
+        fromField.piece === "pawn" && ((fromField.team === "black" && to.row === 7) || (fromField.team === "white" && to.row === 0))
+
+    const isCastleMove = (from: pos, to: pos, state: gameState): boolean => {
+        const fromField = getFieldAtPos(from, state)
+        return fromField.piece === "king" && from.row === to.row && Math.abs(to.col - from.col) === 2
+    }
+
+    const getCastleRookMove = (from: pos, to: pos) => {
+        if (to.col > from.col) {
+            return {
+                rookFrom: { row: from.row, col: 7 },
+                rookTo: { row: from.row, col: 5 }
+            }
+        }
+
+        return {
+            rookFrom: { row: from.row, col: 0 },
+            rookTo: { row: from.row, col: 3 }
+        }
+    }
+
+    const updateCastlingRights = (state: gameState, from: pos, to: pos, moved: field, captured: field | null) => {
+        if (!state.castlingRights || moved.team === null) {
+            return
+        }
+
+        if (moved.piece === "king") {
+            state.castlingRights[moved.team].kingSide = false
+            state.castlingRights[moved.team].queenSide = false
+        }
+
+        if (moved.piece === "rook") {
+            if (moved.team === "white" && from.row === 7 && from.col === 7) state.castlingRights.white.kingSide = false
+            if (moved.team === "white" && from.row === 7 && from.col === 0) state.castlingRights.white.queenSide = false
+            if (moved.team === "black" && from.row === 0 && from.col === 7) state.castlingRights.black.kingSide = false
+            if (moved.team === "black" && from.row === 0 && from.col === 0) state.castlingRights.black.queenSide = false
+        }
+
+        if (captured?.piece === "rook" && captured.team !== null) {
+            if (captured.team === "white" && to.row === 7 && to.col === 7) state.castlingRights.white.kingSide = false
+            if (captured.team === "white" && to.row === 7 && to.col === 0) state.castlingRights.white.queenSide = false
+            if (captured.team === "black" && to.row === 0 && to.col === 7) state.castlingRights.black.kingSide = false
+            if (captured.team === "black" && to.row === 0 && to.col === 0) state.castlingRights.black.queenSide = false
+        }
+    }
+
+    const pseudoMove = (from: pos, to: pos, state: gameState, attack: boolean = false): boolean => {
+        if (!inBounds(from) || !inBounds(to) || samePos(from, to)) {
+            return false
+        }
+
+        const pieceField = state.board[from.row]?.[from.col]
+        const pieceType = pieceField?.piece
+
+        if (!pieceField || pieceField.team !== state.turn) {
+            return false
+        }
+
+        if (pieceType === "pawn") {
+            return attack ? pawnAttack(from, to, state, true) : pawn(from, to, state)
+        }
+
+        if (pieceType === "bishop") {
+            return bishop(from, to, state)
+        }
+
+        if (pieceType === "knight") {
+            return knight(from, to, state)
+        }
+
+        if (pieceType === "rook") {
+            return rook(from, to, state)
+        }
+
+        if (pieceType === "queen") {
+            return queen(from, to, state)
+        }
+
+        if (pieceType === "king") {
+            if (king(from, to, state)) {
+                return true
+            }
+
+            return !attack && canCastle(state, from, to)
+        }
+
+        return false
+    }
+
+    const isSquareUnderAttackByTeam = (state: gameState, target: pos, attackingTeam: team): boolean => {
+        if (attackingTeam === null) {
+            return false
+        }
+
+        const attackState = { ...state, turn: attackingTeam }
+
+        return attackState.board.some(row => row.some(f =>
+            f.team === attackingTeam && pseudoMove(f.pos, target, attackState, true)
+        ))
+    }
+
+    const canCastle = (state: gameState, from: pos, to: pos): boolean => {
+        const kingField = getFieldAtPos(from, state)
+
+        if (kingField.piece !== "king" || kingField.team === null || from.row !== to.row || Math.abs(to.col - from.col) !== 2) {
+            return false
+        }
+
+        const rights = state.castlingRights ?? defaultCastlingRights()
+        const side = to.col > from.col ? "kingSide" : "queenSide"
+        if (!rights[kingField.team][side]) {
+            return false
+        }
+
+        const { rookFrom } = getCastleRookMove(from, to)
+        const rookField = getFieldAtPos(rookFrom, state)
+        if (rookField.piece !== "rook" || rookField.team !== kingField.team) {
+            return false
+        }
+
+        const step = to.col > from.col ? 1 : -1
+        for (let col = from.col + step; col !== rookFrom.col; col += step) {
+            if (state.board[from.row][col].piece !== null) {
+                return false
+            }
+        }
+
+        const enemyTeam = opponent(kingField.team)
+        const pathSquares = [
+            from,
+            { row: from.row, col: from.col + step },
+            to
+        ]
+
+        return pathSquares.every(square => !isSquareUnderAttackByTeam(state, square, enemyTeam))
+    }
+
+    const moveWithoutValidation = (prevState: gameState, fromPos: pos, toPos: pos, moveOptions?: moveOptions, finalizeMove: boolean = true): gameState => {
+        const newState = _.cloneDeep(prevState)
+        newState.castlingRights = _.cloneDeep(prevState.castlingRights ?? defaultCastlingRights())
+        newState.enPassantTarget = null
+        newState.lastMove = { from: fromPos, to: toPos }
+        newState.winner = null
+        newState.result = null
+        newState.positionHistory = [...(prevState.positionHistory ?? [])]
+        newState.uciMoves = [...(prevState.uciMoves ?? [])]
+        newState.halfMoveClock = prevState.halfMoveClock ?? 0
+
+        const from = newState.board[fromPos.row][fromPos.col]
+        const to = newState.board[toPos.row][toPos.col]
+
+        if (from.piece === null || from.team === null) throw new Error("There is no piece to move on position " + formatPos(fromPos))
+
+        const capturedField = to.piece !== null ? _.cloneDeep(to) : null
+        let enPassantCapture: field | null = null
+
+        if (from.piece === "pawn" && prevState.enPassantTarget && samePos(prevState.enPassantTarget, toPos) && to.piece === null) {
+            const capturePos = { row: fromPos.row, col: toPos.col }
+            const capturedPawn = newState.board[capturePos.row][capturePos.col]
+            if (capturedPawn.piece === "pawn" && capturedPawn.team === opponent(from.team)) {
+                enPassantCapture = _.cloneDeep(capturedPawn)
+                newState.board[capturePos.row][capturePos.col].piece = null
+                newState.board[capturePos.row][capturePos.col].team = null
+            }
+        }
+
+        updateCastlingRights(newState, fromPos, toPos, _.cloneDeep(from), capturedField ?? enPassantCapture)
+
+        if (capturedField) {
+            newState.piecesTaken.push(capturedField)
+        }
+
+        if (enPassantCapture) {
+            newState.piecesTaken.push(enPassantCapture)
+        }
+
+        const movedTeam = from.team
+        const movedPiece = from.piece
+
+        newState.board[fromPos.row][fromPos.col].team = null
+        newState.board[fromPos.row][fromPos.col].piece = null
+
+        newState.board[toPos.row][toPos.col].team = movedTeam
+        newState.board[toPos.row][toPos.col].piece = movedPiece
+
+        if (movedPiece === "king" && isCastleMove(fromPos, toPos, prevState)) {
+            const { rookFrom, rookTo } = getCastleRookMove(fromPos, toPos)
+            const rookField = _.cloneDeep(newState.board[rookFrom.row][rookFrom.col])
+            newState.board[rookFrom.row][rookFrom.col].team = null
+            newState.board[rookFrom.row][rookFrom.col].piece = null
+            newState.board[rookTo.row][rookTo.col].team = rookField.team
+            newState.board[rookTo.row][rookTo.col].piece = rookField.piece
+        }
+
+        if (canTransform(newState.board[toPos.row][toPos.col], toPos)) {
+            if (!moveOptions?.transformation) {
+                throw new Error("The move most include what type of pice the should transform into")
+            }
+
+            if (moveOptions.transformation === "king" || moveOptions.transformation === "pawn" || moveOptions.transformation === null) {
+                throw new Error("Player cannot transform a pawn into " + moveOptions.transformation)
+            }
+
+            newState.board[toPos.row][toPos.col].piece = moveOptions.transformation
+        }
+
+        if (movedPiece === "pawn" && Math.abs(toPos.row - fromPos.row) === 2) {
+            newState.enPassantTarget = { row: (toPos.row + fromPos.row) / 2, col: fromPos.col }
+        }
+
+        newState.halfMoveClock = (movedPiece === "pawn" || capturedField !== null || enPassantCapture !== null)
+            ? 0
+            : (prevState.halfMoveClock ?? 0) + 1
+
+        newState.turn = opponent(prevState.turn)
+        newState.positionHistory.push(serializePosition(newState))
+        newState.uciMoves.push(toUciMove({
+            from: fromPos,
+            to: toPos,
+            promotion: movedPiece === "pawn" && (toPos.row === 0 || toPos.row === 7)
+                ? moveOptions?.transformation ?? undefined
+                : undefined
+        }))
+
+        if (finalizeMove) {
+            const whiteKing = getKing(newState, "white")
+            const blackKing = getKing(newState, "black")
+
+            if (whiteKing && blackKing) {
+                newState.ended = gameEnded(newState)
+                newState.winner = checkmate(newState) ? opponent(newState.turn) : null
+                newState.result = newState.winner ? "checkmate" : getDrawReason(newState)
+            } else {
+                newState.ended = false
+                newState.winner = null
+                newState.result = null
+            }
+        } else {
+            newState.ended = false
+            newState.winner = null
+            newState.result = null
+        }
+
+        return newState
+    }
+
+    const leavesOwnKingInCheck = (state: gameState, from: pos, to: pos, moveOptions?: moveOptions): boolean => {
+        const currentKing = getKing(state, state.turn)
+        if (!currentKing) {
+            return false
+        }
+
+        try {
+            const movingField = getFieldAtPos(from, state)
+            const simulationOptions = moveOptions ?? (
+                movingField.piece === "pawn" && canTransform(movingField, to)
+                    ? { transformation: "queen" as piece }
+                    : undefined
+            )
+
+            const simulated = moveWithoutValidation(state, from, to, simulationOptions, false)
+            const simulatedKing = getKing(simulated, state.turn)
+            if (!simulatedKing) {
+                return true
+            }
+
+            return isSquareUnderAttackByTeam(simulated, simulatedKing.pos, opponent(state.turn))
+        } catch (_error) {
+            return true
+        }
+    }
+
     export const createGame = (): gameState => {
-        return { board: createNewBoard(), piecesTaken: [], turn: "white", ended: false }
+        const state: gameState = {
+            board: createNewBoard(),
+            piecesTaken: [],
+            turn: "white",
+            ended: false,
+            castlingRights: defaultCastlingRights(),
+            enPassantTarget: null,
+            lastMove: null,
+            winner: null,
+            halfMoveClock: 0,
+            positionHistory: [],
+            uciMoves: [],
+            result: null
+        }
+
+        state.positionHistory = [serializePosition(state)]
+        return state
     }
 
     export const rotateBoard = (state: gameState): gameState => {
         return {
             ...state,
             board: state.board.map(row => row.reverse()).reverse(),
-            //orientation: state.orientation === "white" ? "black" : "white"
         }
     }
 
-    const canTransform = (fromField: field, to: pos) => fromField.piece === "pawn" && ((fromField.team === "black" && to.row === 7) || (fromField.team === "white" && to.row === 0))
-
-    // not done
     export const move = (fpos: pos | chessPos, tpos: pos | chessPos, prevState: gameState, moveOptions?: moveOptions): gameState => {
-        // make sure to have positions as type pos
         const fromPos: pos = chess.toPosSafe(fpos)
         const toPos: pos = chess.toPosSafe(tpos)
 
-        // if the move is not valid do not change the state.
-        if (!isValidMove(fromPos, toPos, prevState)){
+        if (!isValidMove(fromPos, toPos, prevState, false, moveOptions)) {
             throw new Error("Invalid move")
-        } 
-
-        // clone state to not operate/modify old state
-        const newState = _.cloneDeep(prevState)
-
-        // unpack information
-        const board = newState.board
-        const teamsTurn = newState.turn
-        const from = board[fromPos.row][fromPos.col]
-        const to = board[toPos.row][toPos.col]
-
-        // make sure that a pwan transformation have the transformation input
-        if(canTransform(from, toPos) && !moveOptions?.transformation) {
-            throw new Error("The move most include what type of pice the should transform into")
         }
 
-        // fail if no piece is present 
-        if (from.piece === null) throw new Error("There is no piece to move on position " + formatPos(fromPos))
-
-        // fail if player tries to move other players piece
-        if (from.team !== teamsTurn) throw new Error("This price is not owned by player " + teamsTurn)
-
-        // fail if your own piece is on the spot you will move to
-        if (from.team === to.team) throw new Error("You can not take your own piece : " + to.team + " " + from.team)
-
-        // do the actual move 
-        const tempTeam = from.team;
-        const tempPiece = from.piece;
-
-        // add to captured pices
-        if (newState.board[toPos.row][toPos.col].piece != null) {
-            newState.piecesTaken.push(prevState.board[toPos.row][toPos.col])
-        }
-
-        // from field become empty
-        newState.board[fromPos.row][fromPos.col].team = null
-        newState.board[fromPos.row][fromPos.col].piece = null
-
-        // place the piece on new field
-        newState.board[toPos.row][toPos.col].team = tempTeam
-        newState.board[toPos.row][toPos.col].piece = tempPiece
-
-        // transform pawn
-        if(canTransform(newState.board[toPos.row][toPos.col], toPos) && moveOptions?.transformation){
-            if(moveOptions.transformation === "king")  throw new Error("Player cannot get an extra king")
-            newState.board[toPos.row][toPos.col].piece = moveOptions?.transformation as piece
-        }
-
-        // change too the other players turn
-        newState.turn = changeTeam(newState.turn)
-
-        // check if game have ended
-        newState.ended = gameEnded(newState)
-
-        console.table(newState)
-        return newState
+        return moveWithoutValidation(prevState, fromPos, toPos, moveOptions)
     }
 
-    export function allValidMovesAsPos(state: gameState, attack: boolean = false, checkValidity: boolean = true){
+    export function allValidMovesAsPos(state: gameState, attack: boolean = false, checkValidity: boolean = true) {
         return onlyToPos(actionsCleanUp(allValidMoves(state, attack, checkValidity)))
     }
 
     export const allValidMoves = (state: gameState, attack: boolean = false, checkValidity: boolean = true): action[] => {
-        try {
-            const turn = state.turn
-            const board = state.board
-            const validMoves: action[] = []
+        const validMoves: action[] = []
 
-            for (let i = 0; i < board.length; i++) {
-                for (let j = 0; j < board[i].length; j++) {
-                    const field = board[i][j]
-                    if(field.team === turn){
-                        const movesFromField = validMovesFrom(field.pos, state, attack, checkValidity)
-                        movesFromField.forEach(m => {
-                            validMoves.push({ from: field.pos, to: m })
-                        })
-                    }
+        for (const row of state.board) {
+            for (const field of row) {
+                if (field.team === state.turn) {
+                    const movesFromField = validMovesFrom(field.pos, state, attack, checkValidity)
+                    movesFromField.forEach(m => validMoves.push({ from: field.pos, to: m }))
                 }
             }
-
-            return validMoves
-        } catch (e) {
-            throw new Error("error in allValidMoves: " + e)
         }
+
+        return validMoves
     }
 
     export const validMovesFrom = (fromPos: pos | string, state: gameState, attack: boolean = false, checkValidity: boolean = true): pos[] => {
-
-        let fromPosParsed: pos;
-
         if (!fromPos || !state) {
             return []
         }
 
-        if(typeof fromPos === "string"){
-            fromPosParsed = toPos(fromPos)            
-        }else {
-            fromPosParsed = fromPos;
-        }
+        const parsed = typeof fromPos === "string" ? toPos(fromPos) : fromPos
+        const validMoves: pos[] = []
 
-        const validMoves: pos[] = [];
-
-        state.board.forEach((row, i) => {
-            row.forEach((field, j) => {
-                const pos: pos = { row: i, col: j };
-                if (!checkValidity || isValidMove(fromPosParsed, pos, state, attack)) {
-                    validMoves.push(pos)
+        state.board.forEach((row, rowIndex) => {
+            row.forEach((_field, colIndex) => {
+                const target: pos = { row: rowIndex, col: colIndex }
+                if (isValidMove(parsed, target, state, attack, { checkValidity })) {
+                    validMoves.push(target)
                 }
             })
-        });
+        })
 
-        return validMoves;
+        return validMoves
     }
 
     export const allReachableMoves = (state: gameState): action[] => {
-        try {
-            const turn = state.turn
-            const board = state.board
-            const validMoves: action[] = []
+        const validMoves: action[] = []
 
-            for (let i = 0; i < board.length; i++) {
-                for (let j = 0; j < board[i].length; j++) {
-                    const field = board[i][j]
-                    if(field.team === turn){
-                        if (!field["pos"]) console.log("allReachableMoves", field)
-                        const movesFromField = reachableFrom(field.pos, state)
-                        movesFromField.forEach(m => {
-                            validMoves.push({ from: field.pos, to: m } as action)
-                        })
-                    }
+        for (const row of state.board) {
+            for (const field of row) {
+                if (field.team === state.turn) {
+                    reachableFrom(field.pos, state).forEach(m => validMoves.push({ from: field.pos, to: m }))
                 }
             }
-
-            return validMoves
-        } catch (e) {
-            throw new Error("error in allReachableMoves: " + e)
         }
+
+        return validMoves
     }
 
     export const reachableFrom = (from: pos | string, state: gameState): pos[] => {
-        try {
-            const piece = getFieldAtPos(typeof from === "string" ? toPos(from): from, state)
-            const cleanState = testUtil.createTestGame(emptyBoard, state.turn)
-            if (!piece["pos"]) console.log("reachableFrom", piece)
-            cleanState.board[piece.pos.row][piece.pos.col] = piece
-
-            let fromPosParsed: pos;
-
-            if (!from || !state) {
-                return []
-            }
-
-            if(typeof from === "string"){
-                fromPosParsed = toPos(from)            
-            }else {
-                fromPosParsed = from;
-            }
-
-            const validMoves: pos[] = [];
-
-            cleanState.board.forEach((row, i) => {
-                row.forEach((field, j) => {
-                    const pos: pos = { row: i, col: j };
-                    if (isValidMove(fromPosParsed, pos, cleanState, true)) {
-                        validMoves.push(pos)
-                    }
-                })
-            });
-
-            return validMoves;
-        } catch (e) {
-            throw new Error("error in reachableFrom: " + e)
+        if (!from || !state) {
+            return []
         }
+
+        const parsed = typeof from === "string" ? toPos(from) : from
+        const validMoves: pos[] = []
+
+        state.board.forEach((row, rowIndex) => {
+            row.forEach((_field, colIndex) => {
+                const target: pos = { row: rowIndex, col: colIndex }
+                if (pseudoMove(parsed, target, state, true)) {
+                    validMoves.push(target)
+                }
+            })
+        })
+
+        return validMoves
     }
 
     export const getFieldAtPos = (pos: pos | chessPos, state: gameState): field => {
-        if(typeof pos === "string"){
+        if (typeof pos === "string") {
             pos = toPos(pos)
         }
 
         return state.board[pos.row][pos.col]
     }
 
-    export const isValidMove = (from: pos, to: pos, state: gameState, attack: boolean = false): boolean => {
-        let pieceField: field
-
-        try{
-            pieceField = state.board[from.row][from.col];
-        }catch(e: any){
+    export const isValidMove = (from: pos, to: pos, state: gameState, attack: boolean = false, moveOptions?: moveOptions): boolean => {
+        if (!pseudoMove(from, to, state, attack)) {
             return false
         }
 
-        const pieceType = pieceField.piece;
-
-        if (pieceField.team !== state.turn) {
-            return false;
+        if (attack || moveOptions?.checkValidity === false) {
+            return true
         }
 
-        if (pieceType === "pawn") {
-            return attack ? pawnAttack(from, to, state, attack) : pawn(from, to, state)
-        } else if (pieceType === "bishop") {            
-            return bishop(from, to, state) 
-        } else if (pieceType == "knight") {
-            return knight(from, to, state)
-        } else if (pieceType == "king") {
-            return king(from, to, state)
-        } else if (pieceType == "rook") {
-            return rook(from, to, state)
-        } else if (pieceType == "queen") {
-            return queen(from, to, state)
-        } else {
-            return false;
+        return !leavesOwnKingInCheck(state, from, to, moveOptions)
+    }
+
+    export const notation = (pos: pos): string | chessPos => `${colOptions[pos.col]}${8 - pos.row}`
+
+    export const toUciMove = (candidate: action): string => {
+        const from = String(typeof candidate.from === "string" ? candidate.from : notation(candidate.from)).toLowerCase()
+        const to = String(typeof candidate.to === "string" ? candidate.to : notation(candidate.to)).toLowerCase()
+
+        if (!candidate.promotion || candidate.promotion === "pawn" || candidate.promotion === "king") {
+            return `${from}${to}`
         }
+
+        const promotion = candidate.promotion === "knight" ? "n" : candidate.promotion[0]
+        return `${from}${to}${promotion}`
     }
 
-    export const notation = (pos: pos): string | chessPos => {
-        return `${colOptions[pos.col]}${8 - pos.row}`
+    export const toFen = (state: gameState): string => {
+        const boardState = state.board.map(row => {
+            let emptySquares = 0
+            let fenRow = ""
+
+            for (const square of row) {
+                const fenToken = pieceToFenToken(square)
+                if (!fenToken) {
+                    emptySquares += 1
+                    continue
+                }
+
+                if (emptySquares > 0) {
+                    fenRow += String(emptySquares)
+                    emptySquares = 0
+                }
+
+                fenRow += fenToken
+            }
+
+            if (emptySquares > 0) {
+                fenRow += String(emptySquares)
+            }
+
+            return fenRow
+        }).join("/")
+
+        const rights = state.castlingRights ?? defaultCastlingRights()
+        const castling = `${rights.white.kingSide ? "K" : ""}${rights.white.queenSide ? "Q" : ""}${rights.black.kingSide ? "k" : ""}${rights.black.queenSide ? "q" : ""}` || "-"
+        const enPassant = state.enPassantTarget ? String(notation(state.enPassantTarget)).toLowerCase() : "-"
+        const halfMoveClock = state.halfMoveClock ?? 0
+        const historyLength = state.positionHistory?.length ?? 1
+        const fullMoveNumber = Math.max(1, Math.floor((historyLength - 1) / 2) + 1)
+
+        return `${boardState} ${state.turn === "black" ? "b" : "w"} ${castling} ${enPassant} ${halfMoveClock} ${fullMoveNumber}`
     }
 
-    export const actionsCleanUp = (actions: action[]): action[] => {
-        return actions.map(a => ({from: typeof a.from !== "string" ? notation(a.from) : a.from, to: typeof a.to !== "string" ? notation(a.to) : a.to } as action))
-    }
+    export const positionKey = (state: gameState): string => serializePosition(state)
 
-    export const onlyToPos = (actions: action[]): (pos | chessPos)[] => {
-        return actions.map(a => a.to)
-    }
+    export const actionsCleanUp = (actions: action[]): action[] =>
+        actions.map(a => ({ from: typeof a.from !== "string" ? notation(a.from) : a.from, to: typeof a.to !== "string" ? notation(a.to) : a.to } as action))
 
+    export const onlyToPos = (actions: action[]): (pos | chessPos)[] => actions.map(a => a.to)
 
     export const notationComponents = (pos: pos): { number: number, char: string } => {
         return { number: 8 - pos.row, char: colOptions[pos.col] }
     }
 
-    export const toPosSafe = (notation: string | chessPos | pos) => {
-        if(typeof notation === "string"){
-            return toPos(notation)
-        }
+    export const toPosSafe = (input: string | chessPos | pos) => typeof input === "string" ? toPos(input) : input
 
-        return notation
-    }
+    export const toPos = (input: string): pos => {
+        const normalized = input?.toUpperCase?.() ?? ""
+        const row: number = Number.parseInt(normalized[1])
+        const col: string = normalized[0]
 
-    export const toPos = (notation: string): pos => {
-        const row: number = Number.parseInt(notation[1])
-        const col: string = notation[0]        
-
-        if(notation.length !== 2 
-            || Number.isNaN(row) 
+        if (normalized.length !== 2
+            || Number.isNaN(row)
             || typeof col !== 'string'
-            || !colOptions.includes(String(col)) 
-            || colOptions.indexOf(col) === -1 
-            || (8 - row) < 0) {
-                throw "Input not correct notation : " + col + row
-            }
+            || !colOptions.includes(String(col))
+            || colOptions.indexOf(col) === -1
+            || row < 1
+            || row > 8) {
+            throw "Input not correct notation : " + col + row
+        }
 
         return { col: colOptions.indexOf(col), row: 8 - row } as pos
     }
 
     const changeTeam = (turn: team): team => turn === "white" ? "black" : "white"
 
-    export function gameEnded(state: gameState): boolean{
-            return stalemate(state) || checkmate(state)
+    export function gameEnded(state: gameState): boolean {
+        return checkmate(state) || getDrawReason(state) !== null
     }
 
-    // Stalemate is a kind of draw that happens when one side has NO legal moves to make.
     export function stalemate(state: gameState): boolean {
-        try {
-            return state.board.flat().some(f => f.team === state.turn && f.pos && validMovesFrom(f.pos, state).length < 0)
-        }catch(e){
-            throw new Error("error in stalemate: " + e)
-        }
+        return !check(state) && allValidMoves(state).length === 0
     }
 
-    // https://simple.wikipedia.org/wiki/Check_and_checkmate
-    // filter pawns moves right in front if it out. (den kan ikke tage en modtander ved at gå frem)
-    // led brikkerne tage deres egne med-spillere
-    // TODO
-    // Can I move out of mate?
-    // Can I block mate?
-    // Can I take the attacker?
-    // checkmate 
     export function checkmate(state: gameState): boolean {
-        const board: board = state.board
-        const king: field = board.flat().filter(f => f.piece === "king")[0]   
-        
-        if(!king) return true // no king the game most be over!!!!
-
-        const kingsMoves = onlyToPos(actionsCleanUp(validMovesFrom(king.pos, {...state, turn: king.team}).map(to => ({from: king.pos, to } as action), true)))
-        const validMoves = allValidMovesAsPos({...state, turn: changeTeam(state.turn)}, true)
-
-        if(kingsMoves.length === 0) return check(state)
-
-        return !kingsMoves.some(km => !validMoves.includes(km)) // Can I move out of mate? do there exist a move that does not make make the king under attack
+        return check(state) && allValidMoves(state).length === 0
     }
 
-    export function isUnderAttack(state: gameState, pos: pos): boolean {
-        return allValidMovesAsPos({...state, turn: changeTeam(state.turn)}, true).some(m => comparePos(m, pos))
-    }
+    export function insufficientMaterial(state: gameState): boolean {
+        const activePieces = state.board.flat().filter(field => field.piece !== null)
+        const nonKingPieces = activePieces.filter(field => field.piece !== "king")
 
-    export function comparePos(a: pos | chessPos, b: pos | chessPos): boolean{
-        return toPosSafe(a) === toPosSafe(b)
-    }
-
-    export function check(state: gameState, checkValidity: boolean = true): boolean {
-        try {
-            const board: board = state.board
-            const team: team = changeTeam(state.turn)
-            const king: field = board.flat().filter(f => f.piece === "king" && f.team === state.turn)[0]   
-
-            if(!king) throw new Error("No king found")
-
-            const kingPos = notation(king.pos)     
-
-            const validMoves = onlyToPos(actionsCleanUp(allValidMoves({...state, turn: team}, true, checkValidity)))
-            return validMoves.some(m => m === kingPos)
-        }catch(e){
-            throw new Error("error in check: " + e)
+        if (nonKingPieces.length === 0) {
+            return true
         }
+
+        if (nonKingPieces.length === 1) {
+            return isMinorPiece(nonKingPieces[0].piece)
+        }
+
+        if (nonKingPieces.length === 2 && nonKingPieces.every(field => field.piece === "bishop")) {
+            return nonKingPieces[0].color === nonKingPieces[1].color
+        }
+
+        return false
     }
 
-    export function isWhite(state: gameState): boolean{
+    export function threefoldRepetition(state: gameState): boolean {
+        const currentPosition = serializePosition(state)
+        return countOccurrences(state.positionHistory ?? [], currentPosition) >= 3
+    }
+
+    export function fiftyMoveRule(state: gameState): boolean {
+        return (state.halfMoveClock ?? 0) >= 100
+    }
+
+    export function isUnderAttack(state: gameState, position: pos): boolean {
+        return isSquareUnderAttackByTeam(state, position, opponent(state.turn))
+    }
+
+    export function comparePos(a: pos | chessPos, b: pos | chessPos): boolean {
+        const left = toPosSafe(a)
+        const right = toPosSafe(b)
+        return left.row === right.row && left.col === right.col
+    }
+
+    export function check(state: gameState): boolean {
+        const kingField = getKing(state, state.turn)
+
+        if (!kingField) {
+            throw new Error("No king found")
+        }
+
+        return isSquareUnderAttackByTeam(state, kingField.pos, opponent(state.turn))
+    }
+
+    export function isWhite(state: gameState): boolean {
         return state.turn === "white"
     }
-
 }
