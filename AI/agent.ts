@@ -15,6 +15,7 @@ export abstract class Agent {
     public async FindMoveAsync(state: gameState): Promise<action> {
         return this.FindMove(state)
     }
+    public dispose(): void {}
     /// <summary>
     /// Gets all the possible actions for the agent
     /// </summary>

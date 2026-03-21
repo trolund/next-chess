@@ -10,6 +10,7 @@ import { AlphaBetaAgent } from "../AI/AlphaBetaAgent";
 import { OrderedAlphaBetaAgent } from "../AI/OrderedAlphaBetaAgent";
 import { MCTSAgent } from "../AI/MCTSAgent";
 import { HeuristicAlphaBetaAgent } from "../AI/HeuristicAlphaBetaAgent";
+import { StockfishAgent } from "../AI/StockfishAgent";
 import { emptyBoard } from "../stores/emptyBoard";
 
 let state: gameState
@@ -76,6 +77,13 @@ it('ai heuristic alpha-beta depth 2', () => {
 
   expect(action).toBeDefined()
   console.log(action, timer.getEndTimeAsDateString)
+})
+
+it('ai stockfish preset 1 returns a legal move', () => {
+  const agent = new StockfishAgent(1)
+  const action = agent.FindMove(state)
+
+  expect(chess.isValidMove(chess.toPosSafe(action.from), chess.toPosSafe(action.to), state, false, { transformation: action.promotion ?? "queen" })).toBe(true)
 })
 
 it.each([

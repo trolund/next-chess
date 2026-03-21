@@ -11,6 +11,7 @@ import { useRouter } from 'next/router'
 import { Agent } from '../AI/agent'
 import Image from 'next/image'
 import { createAgent, playerTypes } from '../AI/agent-factory'
+import { stockfishPresetToMs } from '../AI/StockfishAgent'
 import { applyMatchToLeaderboard, LeaderboardEntry, parseLeaderboardImport, PlayerConfig } from '../lib/leaderboard'
 
 
@@ -153,6 +154,10 @@ function Home(props: HomeProps): JSX.Element {
     window.localStorage.setItem(leaderboardStorageKey, JSON.stringify(leaderboard))
   }, [leaderboard])
 
+  useEffect(() => () => {
+    players.forEach(player => player?.dispose())
+  }, [players])
+
   useEffect(() => {
     console.log("🎮 Game started: " + gameStarted);
     // doing the moves
@@ -178,12 +183,15 @@ function Home(props: HomeProps): JSX.Element {
   const AIMove = async (agent: Agent) => {
     const actingTeam = gameState.turn as "white" | "black"
     const actingIndex = actingTeam === "white" ? 0 : 1
+    const searchDescription = playerConfigs[actingIndex].kind === "Stockfish"
+      ? `with ${formatDuration(stockfishPresetToMs(playerConfigs[actingIndex].depth))} think time`
+      : `at depth ${playerConfigs[actingIndex].depth}`
     appendLog({
       team: actingTeam,
       kind: 'search',
       agent: playerConfigs[actingIndex].kind,
       depth: playerConfigs[actingIndex].depth,
-      text: `${actingTeam} ${playerConfigs[actingIndex].kind} started search at depth ${playerConfigs[actingIndex].depth}`
+      text: `${actingTeam} ${playerConfigs[actingIndex].kind} started search ${searchDescription}`
     })
     const startedAt = Date.now()
     const move = await agent.FindMoveAsync(gameState)
@@ -218,7 +226,7 @@ function Home(props: HomeProps): JSX.Element {
       setBlackAIMoveCount(prev => prev + 1)
     }
 
-    doMove(chess.toPosSafe(move.from), chess.toPosSafe(move.to), "queen") // TODO: just always choses queen for now 
+    doMove(chess.toPosSafe(move.from), chess.toPosSafe(move.to), move.promotion ?? "queen")
   }
 
   const rebuildPlayers = (configs: PlayerConfig[]) => {
@@ -312,6 +320,7 @@ function Home(props: HomeProps): JSX.Element {
       winner: s.winner,
       halfMoveClock: s.halfMoveClock,
       positionHistory: s.positionHistory,
+      uciMoves: s.uciMoves,
       result: s.result
     })
 
@@ -479,6 +488,9 @@ function Home(props: HomeProps): JSX.Element {
   const playerLabel = (index: number) => {
     if (playerConfigs[index].kind === "empty") return 'Not configured'
     if (!players[index]) return 'Human player'
+    if (playerConfigs[index].kind === "Stockfish") {
+      return `Stockfish agent (${formatDuration(stockfishPresetToMs(playerConfigs[index].depth))} per move)`
+    }
     return `${playerConfigs[index].kind} agent`
   }
 
@@ -507,6 +519,14 @@ function Home(props: HomeProps): JSX.Element {
     const seconds = totalSeconds % 60
     const centiseconds = Math.floor((ms % 1000) / 10)
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`
+  }
+
+  const depthLabel = (config: PlayerConfig, depth: number) => {
+    if (config.kind === "Stockfish") {
+      return `Think ${formatDuration(stockfishPresetToMs(depth))}`
+    }
+
+    return `Depth ${depth}`
   }
 
   const captureStrip = (pieces: field[]) => (
@@ -549,7 +569,7 @@ function Home(props: HomeProps): JSX.Element {
                 {playerTypes.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
               <select className={styles.select} name="white-depth" id="white-depth" onChange={(e) => changePlayerDepth(e, 0)} value={playerConfigs[0].depth}>
-                {depthOptions.map(depth => <option key={`white-depth-${depth}`} value={depth}>Depth {depth}</option>)}
+                {depthOptions.map(depth => <option key={`white-depth-${depth}`} value={depth}>{depthLabel(playerConfigs[0], depth)}</option>)}
               </select>
               <p className={styles.panelMeta}>{playerLabel(0)}</p>
               <p className={styles.timerText}>AI think time: {formatDuration(whiteThinkMs + whiteActiveMs)}</p>
@@ -653,7 +673,7 @@ function Home(props: HomeProps): JSX.Element {
                 {playerTypes.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
               <select className={styles.select} name="black-depth" id="black-depth" onChange={(e) => changePlayerDepth(e, 1)} value={playerConfigs[1].depth}>
-                {depthOptions.map(depth => <option key={`black-depth-${depth}`} value={depth}>Depth {depth}</option>)}
+                {depthOptions.map(depth => <option key={`black-depth-${depth}`} value={depth}>{depthLabel(playerConfigs[1], depth)}</option>)}
               </select>
               <p className={styles.panelMeta}>{playerLabel(1)}</p>
               <p className={styles.timerText}>AI think time: {formatDuration(blackThinkMs + blackActiveMs)}</p>
@@ -685,7 +705,7 @@ function Home(props: HomeProps): JSX.Element {
                         {entry.captureLabel && <p className={styles.logCapture}>Captured {entry.captureLabel}</p>}
                       </>
                     ) : (
-                      <p className={styles.logText}>Searching at depth {entry.depth}</p>
+                      <p className={styles.logText}>{entry.text}</p>
                     )}
                   </div>
                 ))}

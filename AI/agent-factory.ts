@@ -5,6 +5,7 @@ import { HeuristicAlphaBetaAgent } from "./HeuristicAlphaBetaAgent"
 import { MCTSAgent } from "./MCTSAgent"
 import { MinmaxAgent } from "./MinmaxAgent"
 import { OrderedAlphaBetaAgent } from "./OrderedAlphaBetaAgent"
+import { StockfishAgent } from "./StockfishAgent"
 import { PlayerConfig } from "../lib/leaderboard"
 
 export const playableAgentKinds = [
@@ -12,7 +13,8 @@ export const playableAgentKinds = [
     "Alpha-Beta",
     "Ordered Alpha-Beta",
     "Heuristic Alpha-Beta",
-    "MCTS"
+    "MCTS",
+    "Stockfish"
 ] as const
 
 export const playerTypes = [...playableAgentKinds, "Human player"]
@@ -24,5 +26,6 @@ export const createAgent = (config: PlayerConfig, side: team): Agent | null => {
     if (config.kind === "Ordered Alpha-Beta") return new OrderedAlphaBetaAgent(config.depth, side)
     if (config.kind === "Heuristic Alpha-Beta") return new HeuristicAlphaBetaAgent(config.depth, side)
     if (config.kind === "MCTS") return new MCTSAgent(config.depth, side)
+    if (config.kind === "Stockfish") return new StockfishAgent(config.depth, side)
     return new MinmaxAgent(config.depth, side)
 }

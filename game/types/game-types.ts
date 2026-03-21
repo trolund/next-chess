@@ -25,7 +25,7 @@
     
     export type chessPosList = chessPos[]
 
-    export type action = { from: chessPos | pos, to: chessPos | pos }
+    export type action = { from: chessPos | pos, to: chessPos | pos, promotion?: piece }
 
     export type castlingRights = {
         white: {
@@ -55,6 +55,7 @@
         winner?: team;
         halfMoveClock?: number;
         positionHistory?: string[];
+        uciMoves?: string[];
         result?: gameResult;
     }
 

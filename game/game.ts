@@ -94,16 +94,24 @@ export module chess {
         })
     }
 
+    const pieceToFenToken = (square: field): string | null => {
+        if (!square.piece || !square.team) {
+            return null
+        }
+
+        const normalized = square.piece === "knight" ? "n" : square.piece[0]
+        return square.team === "white" ? normalized.toUpperCase() : normalized.toLowerCase()
+    }
+
     const serializePosition = (state: gameState): string => {
         const boardState = state.board
             .map(row => row.map(field => {
-                if (!field.piece || !field.team) {
+                const fenToken = pieceToFenToken(field)
+                if (!fenToken) {
                     return "#"
                 }
 
-                const token = field.piece[0]
-                const normalized = field.piece === "knight" ? "n" : token
-                return field.team === "white" ? normalized.toLowerCase() : normalized.toUpperCase()
+                return field.team === "white" ? fenToken.toLowerCase() : fenToken.toUpperCase()
             }).join(""))
             .join("/")
 
@@ -284,6 +292,7 @@ export module chess {
         newState.winner = null
         newState.result = null
         newState.positionHistory = [...(prevState.positionHistory ?? [])]
+        newState.uciMoves = [...(prevState.uciMoves ?? [])]
         newState.halfMoveClock = prevState.halfMoveClock ?? 0
 
         const from = newState.board[fromPos.row][fromPos.col]
@@ -354,6 +363,13 @@ export module chess {
 
         newState.turn = opponent(prevState.turn)
         newState.positionHistory.push(serializePosition(newState))
+        newState.uciMoves.push(toUciMove({
+            from: fromPos,
+            to: toPos,
+            promotion: movedPiece === "pawn" && (toPos.row === 0 || toPos.row === 7)
+                ? moveOptions?.transformation ?? undefined
+                : undefined
+        }))
 
         if (finalizeMove) {
             const whiteKing = getKing(newState, "white")
@@ -415,6 +431,7 @@ export module chess {
             winner: null,
             halfMoveClock: 0,
             positionHistory: [],
+            uciMoves: [],
             result: null
         }
 
@@ -534,6 +551,55 @@ export module chess {
     }
 
     export const notation = (pos: pos): string | chessPos => `${colOptions[pos.col]}${8 - pos.row}`
+
+    export const toUciMove = (candidate: action): string => {
+        const from = String(typeof candidate.from === "string" ? candidate.from : notation(candidate.from)).toLowerCase()
+        const to = String(typeof candidate.to === "string" ? candidate.to : notation(candidate.to)).toLowerCase()
+
+        if (!candidate.promotion || candidate.promotion === "pawn" || candidate.promotion === "king") {
+            return `${from}${to}`
+        }
+
+        const promotion = candidate.promotion === "knight" ? "n" : candidate.promotion[0]
+        return `${from}${to}${promotion}`
+    }
+
+    export const toFen = (state: gameState): string => {
+        const boardState = state.board.map(row => {
+            let emptySquares = 0
+            let fenRow = ""
+
+            for (const square of row) {
+                const fenToken = pieceToFenToken(square)
+                if (!fenToken) {
+                    emptySquares += 1
+                    continue
+                }
+
+                if (emptySquares > 0) {
+                    fenRow += String(emptySquares)
+                    emptySquares = 0
+                }
+
+                fenRow += fenToken
+            }
+
+            if (emptySquares > 0) {
+                fenRow += String(emptySquares)
+            }
+
+            return fenRow
+        }).join("/")
+
+        const rights = state.castlingRights ?? defaultCastlingRights()
+        const castling = `${rights.white.kingSide ? "K" : ""}${rights.white.queenSide ? "Q" : ""}${rights.black.kingSide ? "k" : ""}${rights.black.queenSide ? "q" : ""}` || "-"
+        const enPassant = state.enPassantTarget ? String(notation(state.enPassantTarget)).toLowerCase() : "-"
+        const halfMoveClock = state.halfMoveClock ?? 0
+        const historyLength = state.positionHistory?.length ?? 1
+        const fullMoveNumber = Math.max(1, Math.floor((historyLength - 1) / 2) + 1)
+
+        return `${boardState} ${state.turn === "black" ? "b" : "w"} ${castling} ${enPassant} ${halfMoveClock} ${fullMoveNumber}`
+    }
 
     export const positionKey = (state: gameState): string => serializePosition(state)
 
