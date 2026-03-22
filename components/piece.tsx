@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { FunctionComponent } from "react"
 import { chess } from "../game/game";
-import { field, team } from "../game/types/game-types";
+import { action, field, team } from "../game/types/game-types";
 import styles from '../styles/Home.module.css'
 
 interface PieceProps {
@@ -17,11 +17,13 @@ interface PieceProps {
     debugUseNotation?: boolean;
     leftLabel?: string | null;
     bottomLabel?: string | null;
+    lastMove?: action | null;
+    animationId?: number;
 }
 
 type labelPos = "BOTTOM" | "LEFT"
 
-const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onClick, highlight, turn, selected, debug, debugUseNotation, leftLabel, bottomLabel }) => {
+const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onClick, highlight, turn, selected, debug, debugUseNotation, leftLabel, bottomLabel, lastMove, animationId }) => {
 
     const getColor = (isBlack: boolean): string => isBlack ? "var(--white-color)" : "var(--black-color)"
 
@@ -43,8 +45,15 @@ const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onCl
         }
     }
 
+    const isAnimatedDestination = !!lastMove && field.piece !== null && chess.comparePos(lastMove.to, { row, col })
+
+    const animationStyle = isAnimatedDestination ? {
+        ["--move-x" as string]: `calc(${chess.toPosSafe(lastMove!.from).col - col} * var(--field-size))`,
+        ["--move-y" as string]: `calc(${chess.toPosSafe(lastMove!.from).row - row} * var(--field-size))`,
+    } : undefined
+
     return (
-        <div className={className + " " + (highlight ? (field.team !== null && turn !== field.team) ? (styles.threaten) : (styles.highlight) : "") + " " + (selected ? (styles.selected) : "")}
+        <div className={styles.boardCell + " " + className + " " + (highlight ? (field.team !== null && turn !== field.team) ? (styles.threaten) : (styles.highlight) : "") + " " + (selected ? (styles.selected) : "")}
             onClick={() => {
                 if (onClick) onClick({ ...field, pos: { row, col } })
             }}
@@ -56,7 +65,13 @@ const Piece: FunctionComponent<PieceProps> = ({ field, row, col, className, onCl
             {leftLabel && theLabel(leftLabel, "LEFT")}
             {bottomLabel && theLabel(bottomLabel, "BOTTOM")}
             {debug && <div style={{ position: "absolute" }}>{debugUseNotation ? <span style={{fontSize: "0.6rem"}}>{chess.notation({row, col})}<p style={{fontSize: "0.5rem", lineHeight: "normal", marginTop: "-1.1rem"}}>{`${row}, ${col}`}</p></span> : `${row}, ${col}`}</div>}
-            {<Image height="60%" width="60%" src={`/img/${field.team}-${field.piece}.svg`} />}
+            <div
+                key={isAnimatedDestination ? `${animationId}-${row}-${col}` : `static-${row}-${col}`}
+                className={styles.pieceVisual + " " + (isAnimatedDestination ? styles.moveAnimated : "")}
+                style={animationStyle}
+            >
+                <Image height="60%" width="60%" src={`/img/${field.team}-${field.piece}.svg`} />
+            </div>
 
         </div>
     );

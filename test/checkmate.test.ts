@@ -30,7 +30,7 @@ it('checkmate 3', () => {
   const state = loadTestCase(13)!
   expect(state).not.toBeNull()
   
-  expect(chess.checkmate(state)).toBe(true)
+  expect(chess.checkmate({ ...state, turn: "black" })).toBe(true)
 })
 
 it('check - king is check', () => {

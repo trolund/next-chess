@@ -1,6 +1,7 @@
 import { chess } from "../game/game"
-import { action, AIRes, gameState, moveOptions, piece, team } from "../game/types/game-types"
+import { action, gameState, moveOptions, piece, team } from "../game/types/game-types"
 import { Agent } from "./agent"
+import { createYieldController, evaluateState, pointMapper } from "./search-utils"
 
 /// <summary>
 /// An agent that uses the minmax algorithm to find the best move
@@ -9,6 +10,7 @@ export class MinmaxAgent extends Agent {
 
     private depth: number = 3
     private team: team = "white"
+    private defaultMoveTransform: moveOptions = { transformation: "queen" }
 
     constructor(depth: number = 3, team: team = "white") {
         super()
@@ -16,43 +18,73 @@ export class MinmaxAgent extends Agent {
         this.team = team
     }
 
-    private defaultMoveTransform: moveOptions = {transformation: "queen"}
-
     public FindMove(state: gameState): action {
-        return this.miniMax(state, this.depth)
+        const actions = this.getActions(state)
+
+        if (actions.length === 0) {
+            throw new Error("No legal moves available for " + state.turn)
+        }
+
+        let bestAction = actions[0]
+        let bestScore = state.turn === this.team ? -Infinity : Infinity
+
+        for (const candidate of actions) {
+            const nextState = chess.move(candidate.from, candidate.to, state, this.defaultMoveTransform)
+            const score = this.search(nextState, this.depth - 1)
+
+            if (state.turn === this.team) {
+                if (score > bestScore) {
+                    bestScore = score
+                    bestAction = candidate
+                }
+            } else if (score < bestScore) {
+                bestScore = score
+                bestAction = candidate
+            }
+        }
+
+        return bestAction
     }
+
+    public async FindMoveAsync(state: gameState): Promise<action> {
+        const actions = this.getActions(state)
+
+        if (actions.length === 0) {
+            throw new Error("No legal moves available for " + state.turn)
+        }
+
+        const yieldController = createYieldController()
+        let bestAction = actions[0]
+        let bestScore = state.turn === this.team ? -Infinity : Infinity
+
+        for (const candidate of actions) {
+            await yieldController.maybeYield()
+            const nextState = chess.move(candidate.from, candidate.to, state, this.defaultMoveTransform)
+            const score = await this.searchAsync(nextState, this.depth - 1, yieldController)
+
+            if (state.turn === this.team) {
+                if (score > bestScore) {
+                    bestScore = score
+                    bestAction = candidate
+                }
+            } else if (score < bestScore) {
+                bestScore = score
+                bestAction = candidate
+            }
+        }
+
+        return bestAction
+    }
+
     /// <summary>
     /// Evaluates the state of the game
-    /// </summary>    
+    /// </summary>
     evaluate(state: gameState): number {
-        return state.board.reduce((acc, row) => {
-            const rowAcc = row.reduce((rowAcc, f) => {
-                if(f.team === state.turn && f.piece !== null){
-                    return rowAcc + this.pointMapper(f.piece)
-                }
-                return rowAcc
-            }, 0)
-            return acc + rowAcc;
-         }, 0);
+        return evaluateState(state, this.team)
     }
-    // function that maps the pieces to a point value
+
     pointMapper(piece: piece): number {
-        switch (piece) {
-            case "pawn":
-                return 1
-            case "rook":
-                return 5
-            case "knight":
-                return 3
-            case "bishop":
-                return 3
-            case "queen":
-                return 9
-            case "king":
-                return 100
-            default:
-                return 0
-        }
+        return pointMapper(piece)
     }
 
     /// <summary>
@@ -62,104 +94,66 @@ export class MinmaxAgent extends Agent {
         return chess.allValidMoves(state)
     }
 
-    /// <summary>
-    /// Finds the best move for the agent
-    /// </summary>
-    miniMax(state: gameState, depth: number = 3): action {
-        const utilities: AIRes[] = []
-
-        // for each action in the state
-        for (const action of this.getActions(state)) {
-            try{
-                // make a new state with the action
-                const newState = chess.move(action.from, action.to, state, this.defaultMoveTransform)
-                
-                // if it's the other players turn, find the min value otherwise find the max value
-                if(newState.turn !== this.team) {
-                    utilities.push({ score: this.minValue(newState, depth), action})
-                }else {
-                    utilities.push({ score: this.maxValue(newState, depth), action})
-                }
-            }catch (e) {
-                throw new Error("error in minmax: " + e)             
-            }
-        }
-
-        let finalAction: AIRes;
-
-        if (state.turn === "white"){
-            const mapped = utilities.map(x => x.score)
-            const max = Math.min(...mapped)
-            const index = mapped.indexOf(max)
-            finalAction = utilities[index]
-        }else {
-            const mapped = utilities.map(x => x.score)
-            const max = Math.max(...mapped)
-            const index = mapped.indexOf(max)
-            finalAction = utilities[index]
-        }
-
-        if (finalAction === undefined) {
-            debugger
-            throw new Error("final action is undefined")
-        }
-        
-        return finalAction.action
-    }
-
-    /// <summary>
-    /// Finds the max value of the state
-    /// </summary>
-    maxValue(state: gameState, depth: number = 3) {
-
-        if (this.terminalTest(state) || depth == 0) {
+    private search(state: gameState, depth: number): number {
+        if (depth <= 0 || this.terminalTest(state)) {
             return this.evaluate(state)
         }
 
-        let v = -Infinity
-
-        for (const a of this.getActions(state)) {
-            const newState = chess.move(a.from, a.to, state, this.defaultMoveTransform)
-
-            if (newState.turn !== this.team){ // human turn
-                v = Math.max(v, this.minValue(newState, depth - 1))
-            }else {
-                v = Math.max(v, this.maxValue(newState, depth - 1))
-            }
-            
-        }
-        return v        
-    }
-
-    /// <summary>
-    /// Finds the min value of the state
-    /// </summary>
-    minValue(state: gameState, depth: number = 3) {
-
-        if (this.terminalTest(state) || depth == 0) {
+        const actions = this.getActions(state)
+        if (actions.length === 0) {
             return this.evaluate(state)
         }
 
-        let v = Infinity
-
-        for (const a of this.getActions(state)) {
-            const newState = chess.move(a.from, a.to, state, this.defaultMoveTransform)
-
-            if (newState.turn === "white"){ // human turn
-                v = Math.max(v, this.maxValue(newState, depth - 1))
-            }else {
-                v = Math.max(v, this.minValue(newState, depth - 1))
+        if (state.turn === this.team) {
+            let best = -Infinity
+            for (const candidate of actions) {
+                const nextState = chess.move(candidate.from, candidate.to, state, this.defaultMoveTransform)
+                best = Math.max(best, this.search(nextState, depth - 1))
             }
-            
+            return best
         }
-        return v        
+
+        let best = Infinity
+        for (const candidate of actions) {
+            const nextState = chess.move(candidate.from, candidate.to, state, this.defaultMoveTransform)
+            best = Math.min(best, this.search(nextState, depth - 1))
+        }
+        return best
+    }
+
+    private async searchAsync(state: gameState, depth: number, yieldController: { maybeYield: () => Promise<void> }): Promise<number> {
+        await yieldController.maybeYield()
+
+        if (depth <= 0 || this.terminalTest(state)) {
+            return this.evaluate(state)
+        }
+
+        const actions = this.getActions(state)
+        if (actions.length === 0) {
+            return this.evaluate(state)
+        }
+
+        if (state.turn === this.team) {
+            let best = -Infinity
+            for (const candidate of actions) {
+                const nextState = chess.move(candidate.from, candidate.to, state, this.defaultMoveTransform)
+                best = Math.max(best, await this.searchAsync(nextState, depth - 1, yieldController))
+            }
+            return best
+        }
+
+        let best = Infinity
+        for (const candidate of actions) {
+            const nextState = chess.move(candidate.from, candidate.to, state, this.defaultMoveTransform)
+            best = Math.min(best, await this.searchAsync(nextState, depth - 1, yieldController))
+        }
+        return best
     }
 
     /// <summary>
     /// Checks if the state is a terminal state
     /// </summary>
     terminalTest(state: gameState): boolean {
-        return chess.checkmate(state)
+        return chess.gameEnded(state) || state.ended
     }
-
 }

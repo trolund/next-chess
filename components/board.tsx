@@ -1,6 +1,6 @@
 import { FunctionComponent } from "react"
 import { chess } from "../game/game"
-import { board, field, pos, team } from "../game/types/game-types";
+import { action, board, field, pos, team } from "../game/types/game-types";
 import styles from '../styles/Home.module.css'
 import Piece from "./piece";
 
@@ -13,9 +13,11 @@ interface BoardProps {
     debug?: boolean;
     debugUseNotation?: boolean;
     disableUserInput?: boolean;
+    lastMove?: action | null;
+    animationId?: number;
 }
 
-const Board: FunctionComponent<BoardProps> = ({ board, highlight, pieceOnClick, turn, selected, debug, debugUseNotation, disableUserInput }) => {
+const Board: FunctionComponent<BoardProps> = ({ board, highlight, pieceOnClick, turn, selected, debug, debugUseNotation, disableUserInput, lastMove, animationId }) => {
 
     const label = (row: number, col: number): { bottom: string | null, left: string | null } => {
         const { number, char } = chess.notationComponents({ col, row })
@@ -41,6 +43,8 @@ const Board: FunctionComponent<BoardProps> = ({ board, highlight, pieceOnClick, 
                     return (<Piece
                         highlight={highlight?.find(x => x.col === col && x.row === row) !== undefined}
                         selected={selected && selected?.pos && col === selected.pos.col && row === selected.pos.row}
+                        lastMove={lastMove}
+                        animationId={animationId}
                         turn={turn}
                         onClick={disableUserInput ? () => { console.log("User input disabled") } : pieceOnClick}
                         key={"#" + row + "#" + col}

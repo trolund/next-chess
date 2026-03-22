@@ -1,7 +1,12 @@
 import { chess } from '../../game/game'
-import { board, field, gameState, piece, simpleBoard, simplePiece, team, pos, chessPosList, action, chessPos } from '../../game/types/game-types'
+import { board, castlingRights, field, gameState, piece, simpleBoard, simplePiece, team, pos, chessPosList, action, chessPos } from '../../game/types/game-types'
 
 export module testUtil {
+
+    export const createCastlingRights = (enabled: boolean = false): castlingRights => ({
+        white: { kingSide: enabled, queenSide: enabled },
+        black: { kingSide: enabled, queenSide: enabled }
+    })
 
     const createNewBoardFromSimpleBoard = (sb: simpleBoard): board => {
 
@@ -105,13 +110,28 @@ export module testUtil {
         }
     }
 
-    export const createTestGame = (sb: simpleBoard, turn: team = "white", piecesTaken: field[] = []): gameState => {
+    export const createTestGame = (sb: simpleBoard, turn: team = "white", piecesTaken: field[] = [], castlingRights: castlingRights = createCastlingRights()): gameState => {
 
         if (!sb || !validateSizeOfSimpleBoard(sb)) {
             throw "test board is not the correct size!"
         }
 
-        return { board: createNewBoardFromSimpleBoard(sb), piecesTaken, turn, ended: false }
+        const state: gameState = {
+            board: createNewBoardFromSimpleBoard(sb),
+            piecesTaken,
+            turn,
+            ended: false,
+            castlingRights,
+            enPassantTarget: null,
+            lastMove: null,
+            winner: null,
+            halfMoveClock: 0,
+            positionHistory: [],
+            result: null
+        }
+
+        state.positionHistory = [chess.positionKey(state)]
+        return state
     }
 
     export const printBoard = (sb: board) => {
